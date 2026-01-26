@@ -1,0 +1,59 @@
+{
+  "name": "@per_moeller/asterisk-ari",
+  "version": "1.0.1",
+  "description": "Modern TypeScript ARI (Asterisk REST Interface) client with WebSocket reconnection and full API coverage",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src/",
+    "format": "prettier --write src/",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "asterisk",
+    "ari",
+    "voip",
+    "telephony",
+    "pbx",
+    "websocket",
+    "typescript"
+  ],
+  "author": "Per Moeller",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PerMoeller/asterisk-ari.git"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.0",
+    "vitest": "^2.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
