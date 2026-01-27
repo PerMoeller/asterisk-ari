@@ -323,6 +323,36 @@ export interface ApplicationMoveFailedEvent extends BaseEvent {
   args: string[];
 }
 
+export interface ApplicationRegisteredEvent extends BaseEvent {
+  type: 'ApplicationRegistered';
+}
+
+export interface ApplicationUnregisteredEvent extends BaseEvent {
+  type: 'ApplicationUnregistered';
+}
+
+// ============================================================================
+// Channel User Event
+// ============================================================================
+
+export interface ChannelUsereventEvent extends BaseEvent {
+  type: 'ChannelUserevent';
+  channel?: Channel;
+  bridge?: Bridge;
+  endpoint?: Endpoint;
+  eventname: string;
+  userevent: Record<string, string>;
+}
+
+// ============================================================================
+// Channel Transfer Event (Asterisk 22+)
+// ============================================================================
+
+export interface ChannelTransferEvent extends BaseEvent {
+  type: 'ChannelTransfer';
+  channel: Channel;
+}
+
 // ============================================================================
 // Union of All Events
 // ============================================================================
@@ -365,7 +395,11 @@ export type AriEvent =
   | TextMessageReceivedEvent
   | DialEvent
   | ApplicationReplacedEvent
-  | ApplicationMoveFailedEvent;
+  | ApplicationMoveFailedEvent
+  | ApplicationRegisteredEvent
+  | ApplicationUnregisteredEvent
+  | ChannelUsereventEvent
+  | ChannelTransferEvent;
 
 export type AriEventType = AriEvent['type'];
 
@@ -412,6 +446,10 @@ export interface AriEventMap {
   Dial: DialEvent;
   ApplicationReplaced: ApplicationReplacedEvent;
   ApplicationMoveFailed: ApplicationMoveFailedEvent;
+  ApplicationRegistered: ApplicationRegisteredEvent;
+  ApplicationUnregistered: ApplicationUnregisteredEvent;
+  ChannelUserevent: ChannelUsereventEvent;
+  ChannelTransfer: ChannelTransferEvent;
   '*': AriEvent;
 }
 
@@ -438,6 +476,8 @@ export type ChannelEventType =
   | 'ChannelToneDetected'
   | 'ChannelEnteredBridge'
   | 'ChannelLeftBridge'
+  | 'ChannelUserevent'
+  | 'ChannelTransfer'
   | 'Dial';
 
 export type BridgeEventType =

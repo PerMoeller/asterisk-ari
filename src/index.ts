@@ -155,6 +155,12 @@ export type {
   // Application events
   ApplicationReplacedEvent,
   ApplicationMoveFailedEvent,
+  ApplicationRegisteredEvent,
+  ApplicationUnregisteredEvent,
+  // Channel user event
+  ChannelUsereventEvent,
+  // Channel transfer event
+  ChannelTransferEvent,
   // Event type categories
   ChannelEventType,
   BridgeEventType,

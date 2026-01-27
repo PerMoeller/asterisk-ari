@@ -1,0 +1,41 @@
+# Source files (dist is published)
+src/
+tsconfig.json
+
+# Tests
+tests/
+*.test.ts
+vitest.config.ts
+
+# Examples
+examples/
+
+# Development config
+.eslintrc*
+eslint.config.*
+.prettierrc*
+.editorconfig
+CLAUDE.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# npm
+node_modules/
+package-lock.json
+.npmrc
+
+# Build artifacts
+*.tsbuildinfo
