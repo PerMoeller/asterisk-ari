@@ -199,6 +199,10 @@ export class ChannelInstance implements Channel {
     if (data.language !== undefined) this.language = data.language;
     if (data.channelvars !== undefined) this.channelvars = data.channelvars;
     if (data.protocol_id !== undefined) this.protocol_id = data.protocol_id;
+    // Asterisk 16-17 compatibility: callId was renamed to protocol_id in Asterisk 18
+    if (this.protocol_id === undefined && data.callId !== undefined) {
+      this.protocol_id = data.callId;
+    }
   }
 
   // ============================================================================

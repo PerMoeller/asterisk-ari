@@ -204,9 +204,21 @@ export interface Channel {
   channelvars?: Record<string, string>;
   /**
    * Protocol-specific identifier (e.g., SIP Call-ID)
-   * @since Asterisk 20+
+   *
+   * @remarks
+   * In Asterisk 16-17, this was called `callId`. The library automatically
+   * copies `callId` to `protocol_id` for API consistency across versions.
+   *
+   * @since Asterisk 18+ (as protocol_id), Asterisk 16-17 (as callId)
    */
   protocol_id?: string;
+  /**
+   * Protocol-specific identifier (e.g., SIP Call-ID)
+   *
+   * @deprecated Use `protocol_id` instead. This property is only present
+   * in Asterisk 16-17. The library automatically copies this to `protocol_id`.
+   */
+  callId?: string;
 }
 
 /**
