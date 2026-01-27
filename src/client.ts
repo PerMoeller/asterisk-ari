@@ -51,7 +51,7 @@ import { BridgeInstance } from './models/bridge.js';
 import { PlaybackInstance } from './models/playback.js';
 import { LiveRecordingInstance, StoredRecordingInstance } from './models/recording.js';
 
-import type { Channel, Bridge, Playback, LiveRecording } from './types/api.js';
+import type { Channel, Bridge, Playback, LiveRecording, CreateBridgeParams } from './types/api.js';
 
 type EventListener<T> = (event: T) => void | Promise<void>;
 
@@ -273,16 +273,16 @@ export class AriClient extends AriEventEmitter {
     this.versionCompat = versionCompat;
 
     // Initialize API resources
-    this.channels = new ChannelsResource(http, versionCompat);
-    this.bridges = new BridgesResource(http, versionCompat);
-    this.endpoints = new EndpointsResource(http, versionCompat);
-    this.applications = new ApplicationsResource(http, versionCompat);
-    this.asterisk = new AsteriskResource(http, versionCompat);
-    this.playbacks = new PlaybacksResource(http, versionCompat);
-    this.recordings = new RecordingsResource(http, versionCompat);
-    this.sounds = new SoundsResource(http, versionCompat);
-    this.mailboxes = new MailboxesResource(http, versionCompat);
-    this.deviceStates = new DeviceStatesResource(http, versionCompat);
+    this.channels = new ChannelsResource(this, http, versionCompat);
+    this.bridges = new BridgesResource(this, http, versionCompat);
+    this.endpoints = new EndpointsResource(this, http, versionCompat);
+    this.applications = new ApplicationsResource(this, http, versionCompat);
+    this.asterisk = new AsteriskResource(this, http, versionCompat);
+    this.playbacks = new PlaybacksResource(this, http, versionCompat);
+    this.recordings = new RecordingsResource(this, http, versionCompat);
+    this.sounds = new SoundsResource(this, http, versionCompat);
+    this.mailboxes = new MailboxesResource(this, http, versionCompat);
+    this.deviceStates = new DeviceStatesResource(this, http, versionCompat);
 
     // Set up WebSocket event handling
     this.setupWebSocketEvents();
@@ -336,7 +336,7 @@ export class AriClient extends AriEventEmitter {
     }
     if ('bridge' in event && event.bridge) {
       // Return a BridgeInstance with the bridge data
-      return this.Bridge(event.bridge.id, event.bridge);
+      return this._getBridgeInstance(event.bridge.id, event.bridge);
     }
     if ('playback' in event && event.playback) {
       // Return a PlaybackInstance with the playback data
@@ -408,27 +408,26 @@ export class AriClient extends AriEventEmitter {
   // ============================================================================
 
   /**
-   * Create or retrieve a Channel instance.
+   * Create a new Channel instance for originating calls.
    *
-   * Channel instances provide event-based programming for individual channels.
-   * Events are automatically routed to the appropriate instance based on channel ID.
+   * Use this to create a new channel that will be originated. For loading
+   * an existing channel from Asterisk, use `client.channels.get(id)` instead.
    *
    * @param id - Channel ID (auto-generated if not provided)
-   * @param data - Initial channel data
+   * @param data - Initial channel data (typically from events)
    * @returns Channel instance for event handling and operations
    *
    * @example
    * ```typescript
-   * // Create a channel instance from an event
-   * client.on('StasisStart', (event, channelData) => {
-   *   const channel = client.Channel(channelData.id, channelData);
-   *
-   *   channel.on('ChannelDtmfReceived', (event) => {
-   *     console.log(`DTMF: ${event.digit}`);
-   *   });
-   *
+   * // Create a new channel for originating
+   * const channel = client.Channel();
+   * channel.on('StasisStart', async () => {
    *   await channel.answer();
    * });
+   * await channel.originate({ endpoint: 'PJSIP/1000', app: 'my-app' });
+   *
+   * // Load an existing channel (use channels.get instead)
+   * const existing = await client.channels.get('channel-id');
    * ```
    */
   Channel(id?: string, data?: Partial<Channel>): ChannelInstance {
@@ -444,25 +443,46 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Create or retrieve a Bridge instance.
+   * Create a new bridge on Asterisk.
    *
-   * Bridge instances provide event-based programming for bridges.
+   * This creates a bridge on Asterisk and returns an instance with methods
+   * and event handling. For loading an existing bridge, use `client.bridges.get(id)`.
    *
-   * @param id - Bridge ID (auto-generated if not provided)
-   * @param data - Initial bridge data
+   * @param params - Bridge creation parameters (type, name, bridgeId)
    * @returns Bridge instance for event handling and operations
    *
    * @example
    * ```typescript
-   * const bridge = client.Bridge();
-   * await bridge.create({ type: 'mixing' });
-   *
+   * // Create a mixing bridge
+   * const bridge = await client.Bridge({ type: 'mixing' });
    * bridge.on('ChannelEnteredBridge', (event) => {
-   *   console.log(`${event.channel.name} joined the bridge`);
+   *   console.log(`${event.channel.name} joined`);
    * });
+   *
+   * // Create with specific ID and name
+   * const namedBridge = await client.Bridge({
+   *   bridgeId: 'my-bridge',
+   *   type: 'holding',
+   *   name: 'Hold Music Bridge'
+   * });
+   *
+   * // Load an existing bridge (use bridges.get instead)
+   * const existing = await client.bridges.get('bridge-id');
    * ```
    */
-  Bridge(id?: string, data?: Partial<Bridge>): BridgeInstance {
+  async Bridge(params?: CreateBridgeParams): Promise<BridgeInstance> {
+    const id = params?.bridgeId || crypto.randomUUID();
+    const instance = this._getBridgeInstance(id);
+    const result = await this.bridges.createOrUpdate(id, params);
+    instance.updateData(result);
+    return instance;
+  }
+
+  /**
+   * Get or create a BridgeInstance for internal use (event routing, API responses).
+   * @internal
+   */
+  _getBridgeInstance(id?: string, data?: Partial<Bridge>): BridgeInstance {
     const existingId = id || data?.id;
     if (existingId) {
       const existing = this.bridgeInstances.get(existingId);
@@ -475,23 +495,24 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Create or retrieve a Playback instance.
+   * Create a new Playback instance.
    *
-   * Playback instances provide event-based programming for media playback.
+   * Use this to create a playback instance before starting playback.
+   * For loading an existing playback from Asterisk, use `client.playbacks.get(id)` instead.
    *
    * @param id - Playback ID (auto-generated if not provided)
-   * @param data - Initial playback data
+   * @param data - Initial playback data (typically from events)
    * @returns Playback instance for event handling and operations
    *
    * @example
    * ```typescript
+   * // Create a new playback
    * const playback = client.Playback();
-   *
-   * playback.on('PlaybackFinished', (event) => {
-   *   console.log('Playback completed');
-   * });
-   *
+   * playback.on('PlaybackFinished', () => console.log('Done'));
    * await channel.play({ media: 'sound:hello', playbackId: playback.id });
+   *
+   * // Load an existing playback (use playbacks.get instead)
+   * const existing = await client.playbacks.get('playback-id');
    * ```
    */
   Playback(id?: string, data?: Partial<Playback>): PlaybackInstance {

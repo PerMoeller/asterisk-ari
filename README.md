@@ -84,12 +84,12 @@ All ARI resources are available on the client:
 ```typescript
 // Channels
 const channels = await client.channels.list();
-const channel = await client.channels.get('channel-id');
+const channel = await client.channels.get('channel-id'); // Returns ChannelInstance
 await client.channels.hangup('channel-id');
 
 // Bridges
 const bridges = await client.bridges.list();
-const bridge = await client.bridges.create({ type: 'mixing' });
+const bridge = await client.bridges.get('bridge-id'); // Returns BridgeInstance
 await client.bridges.addChannel(bridge.id, { channel: 'channel-id' });
 
 // Endpoints
@@ -101,7 +101,7 @@ const apps = await client.applications.list();
 await client.applications.subscribe('my-app', 'channel:channel-id');
 
 // Playbacks
-const playback = await client.playbacks.get('playback-id');
+const playback = await client.playbacks.get('playback-id'); // Returns PlaybackInstance
 await client.playbacks.control('playback-id', 'pause');
 
 // Recordings
@@ -152,7 +152,8 @@ await channel.originate({
 ### Bridge
 
 ```typescript
-const bridge = client.Bridge();
+// Create a new bridge
+const bridge = await client.Bridge({ type: 'mixing' });
 
 bridge.on('ChannelEnteredBridge', (event, br) => {
   console.log('Channel entered:', event.channel.name);
@@ -164,8 +165,10 @@ bridge.on('ChannelLeftBridge', (event, br) => {
   }
 });
 
-await bridge.create({ type: 'mixing' });
 await bridge.addChannel({ channel: channel.id });
+
+// Load an existing bridge
+const existing = await client.bridges.get('bridge-id');
 ```
 
 ### Playback

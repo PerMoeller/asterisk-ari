@@ -4,6 +4,7 @@
 
 import type { HttpConnection } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
 
 /**
  * Base class for ARI API resources
@@ -11,8 +12,10 @@ import type { VersionCompat } from '../version.js';
 export abstract class BaseResource {
   protected readonly http: HttpConnection;
   protected readonly version: VersionCompat;
+  protected readonly client: AriClient;
 
-  constructor(http: HttpConnection, version: VersionCompat) {
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    this.client = client;
     this.http = http;
     this.version = version;
   }

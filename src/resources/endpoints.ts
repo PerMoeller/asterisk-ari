@@ -5,14 +5,15 @@
 import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
 import type { Endpoint, TextMessage } from '../types/api.js';
 
 /**
  * Endpoints API - Manage endpoints (phones, trunks, etc.)
  */
 export class EndpointsResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**

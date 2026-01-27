@@ -6,6 +6,8 @@ import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import { toQueryParams } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
+import type { BridgeInstance } from '../models/bridge.js';
 import type {
   Bridge,
   CreateBridgeParams,
@@ -21,8 +23,8 @@ import type {
  * Bridges API - Manage bridges (conference rooms, etc.)
  */
 export class BridgesResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**
@@ -33,10 +35,34 @@ export class BridgesResource extends BaseResource {
   }
 
   /**
-   * Get a bridge's details
+   * Get a bridge by ID.
+   *
+   * Returns a BridgeInstance with methods and event handling.
+   * Throws AriHttpError with status 404 if the bridge does not exist.
+   *
+   * @param bridgeId - The bridge ID
+   * @returns BridgeInstance with current data from Asterisk
+   * @throws {AriHttpError} If the bridge doesn't exist (404) or other API error
+   *
+   * @example
+   * ```typescript
+   * // Load an existing bridge
+   * const bridge = await client.bridges.get('my-bridge-id');
+   * bridge.on('ChannelEnteredBridge', (event) => { ... });
+   *
+   * // Check if bridge exists
+   * try {
+   *   const bridge = await client.bridges.get('unknown-id');
+   * } catch (e) {
+   *   if (e instanceof AriHttpError && e.status === 404) {
+   *     console.log('Bridge not found');
+   *   }
+   * }
+   * ```
    */
-  async get(bridgeId: string): Promise<Bridge> {
-    return this.http.get<Bridge>(`/bridges/${encodeURIComponent(bridgeId)}`);
+  async get(bridgeId: string): Promise<BridgeInstance> {
+    const data = await this.http.get<Bridge>(`/bridges/${encodeURIComponent(bridgeId)}`);
+    return this.client._getBridgeInstance(data.id, data);
   }
 
   /**

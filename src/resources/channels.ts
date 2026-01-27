@@ -6,6 +6,8 @@ import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import { toQueryParams } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
+import type { ChannelInstance } from '../models/channel.js';
 import type {
   Channel,
   OriginateParams,
@@ -29,8 +31,8 @@ import type {
  * Channels API - Manage calls and channels
  */
 export class ChannelsResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**
@@ -41,10 +43,34 @@ export class ChannelsResource extends BaseResource {
   }
 
   /**
-   * Get a channel's details
+   * Get a channel by ID.
+   *
+   * Returns a ChannelInstance with methods and event handling.
+   * Throws AriHttpError with status 404 if the channel does not exist.
+   *
+   * @param channelId - The channel ID
+   * @returns ChannelInstance with current data from Asterisk
+   * @throws {AriHttpError} If the channel doesn't exist (404) or other API error
+   *
+   * @example
+   * ```typescript
+   * // Load an existing channel
+   * const channel = await client.channels.get('channel-id');
+   * channel.on('ChannelDtmfReceived', (event) => { ... });
+   *
+   * // Check if channel exists
+   * try {
+   *   const channel = await client.channels.get('unknown-id');
+   * } catch (e) {
+   *   if (e instanceof AriHttpError && e.status === 404) {
+   *     console.log('Channel not found');
+   *   }
+   * }
+   * ```
    */
-  async get(channelId: string): Promise<Channel> {
-    return this.http.get<Channel>(`/channels/${encodeURIComponent(channelId)}`);
+  async get(channelId: string): Promise<ChannelInstance> {
+    const data = await this.http.get<Channel>(`/channels/${encodeURIComponent(channelId)}`);
+    return this.client.Channel(data.id, data);
   }
 
   /**

@@ -5,14 +5,15 @@
 import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
 import type { DeviceStateResource, DeviceState } from '../types/api.js';
 
 /**
  * Device States API - Manage device states
  */
 export class DeviceStatesResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**

@@ -6,14 +6,15 @@ import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import { toQueryParams } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
 import type { Sound, ListSoundsParams } from '../types/api.js';
 
 /**
  * Sounds API - List available sounds
  */
 export class SoundsResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**

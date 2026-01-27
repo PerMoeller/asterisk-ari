@@ -5,14 +5,15 @@
 import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
 import type { Application } from '../types/api.js';
 
 /**
  * Applications API - Manage Stasis applications
  */
 export class ApplicationsResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**

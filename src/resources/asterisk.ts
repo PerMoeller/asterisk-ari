@@ -5,6 +5,7 @@
 import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
 import type { AsteriskInfo, Variable, Module, LogChannel } from '../types/api.js';
 
 export type AsteriskInfoFilter = 'build' | 'system' | 'config' | 'status';
@@ -13,8 +14,8 @@ export type AsteriskInfoFilter = 'build' | 'system' | 'config' | 'status';
  * Asterisk API - Manage Asterisk system resources
  */
 export class AsteriskResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**

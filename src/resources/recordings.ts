@@ -6,14 +6,15 @@ import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import { toQueryParams } from '../connection.js';
 import type { VersionCompat } from '../version.js';
+import type { AriClient } from '../client.js';
 import type { StoredRecording, LiveRecording, StoredRecordingCopyParams } from '../types/api.js';
 
 /**
  * Stored Recordings API
  */
 export class StoredRecordingsResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**
@@ -64,8 +65,8 @@ export class StoredRecordingsResource extends BaseResource {
  * Live Recordings API
  */
 export class LiveRecordingsResource extends BaseResource {
-  constructor(http: HttpConnection, version: VersionCompat) {
-    super(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    super(client, http, version);
   }
 
   /**
@@ -139,8 +140,8 @@ export class RecordingsResource {
   public readonly stored: StoredRecordingsResource;
   public readonly live: LiveRecordingsResource;
 
-  constructor(http: HttpConnection, version: VersionCompat) {
-    this.stored = new StoredRecordingsResource(http, version);
-    this.live = new LiveRecordingsResource(http, version);
+  constructor(client: AriClient, http: HttpConnection, version: VersionCompat) {
+    this.stored = new StoredRecordingsResource(client, http, version);
+    this.live = new LiveRecordingsResource(client, http, version);
   }
 }
