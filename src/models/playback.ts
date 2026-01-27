@@ -13,11 +13,32 @@ import type {
   PlaybackFinishedEvent,
 } from '../events/types.js';
 
-type PlaybackEventListener<E> = (event: E, playback: PlaybackInstance) => void | Promise<void>;
+/**
+ * Type for playback event listener functions.
+ * The listener receives the event data and the playback instance.
+ * @template E - The event type
+ */
+export type PlaybackEventListener<E> = (event: E, playback: PlaybackInstance) => void | Promise<void>;
 
-interface PlaybackEventListeners {
+/**
+ * Interface defining all playback event listeners with their typed signatures.
+ * Use this to type your listener functions when working with playback events.
+ *
+ * @example
+ * ```typescript
+ * import type { PlaybackEventListeners } from '@per_moeller/asterisk-ari';
+ *
+ * const finishedHandler: PlaybackEventListeners['PlaybackFinished'] = (event, playback) => {
+ *   console.log(`Playback ${playback.id} finished`);
+ * };
+ * ```
+ */
+export interface PlaybackEventListeners {
+  /** Fired when playback starts */
   PlaybackStarted: PlaybackEventListener<PlaybackStartedEvent>;
+  /** Fired when playback continues to the next media item */
   PlaybackContinuing: PlaybackEventListener<PlaybackContinuingEvent>;
+  /** Fired when playback finishes */
   PlaybackFinished: PlaybackEventListener<PlaybackFinishedEvent>;
 }
 

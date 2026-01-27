@@ -25,14 +25,38 @@ import type {
 import type { PlaybackInstance } from './playback.js';
 import type { LiveRecordingInstance } from './recording.js';
 
-type BridgeEventListener<E> = (event: E, bridge: BridgeInstance) => void | Promise<void>;
+/**
+ * Type for bridge event listener functions.
+ * The listener receives the event data and the bridge instance.
+ * @template E - The event type
+ */
+export type BridgeEventListener<E> = (event: E, bridge: BridgeInstance) => void | Promise<void>;
 
-interface BridgeEventListeners {
+/**
+ * Interface defining all bridge event listeners with their typed signatures.
+ * Use this to type your listener functions when working with bridge events.
+ *
+ * @example
+ * ```typescript
+ * import type { BridgeEventListeners } from '@per_moeller/asterisk-ari';
+ *
+ * const enteredHandler: BridgeEventListeners['ChannelEnteredBridge'] = (event, bridge) => {
+ *   console.log(`Channel ${event.channel.id} entered bridge ${bridge.id}`);
+ * };
+ * ```
+ */
+export interface BridgeEventListeners {
+  /** Fired when a bridge is created */
   BridgeCreated: BridgeEventListener<BridgeCreatedEvent>;
+  /** Fired when a bridge is destroyed */
   BridgeDestroyed: BridgeEventListener<BridgeDestroyedEvent>;
+  /** Fired when two bridges are merged */
   BridgeMerged: BridgeEventListener<BridgeMergedEvent>;
+  /** Fired when the video source for a bridge changes */
   BridgeVideoSourceChanged: BridgeEventListener<BridgeVideoSourceChangedEvent>;
+  /** Fired when a channel enters the bridge */
   ChannelEnteredBridge: BridgeEventListener<ChannelEnteredBridgeEvent>;
+  /** Fired when a channel leaves the bridge */
   ChannelLeftBridge: BridgeEventListener<ChannelLeftBridgeEvent>;
 }
 

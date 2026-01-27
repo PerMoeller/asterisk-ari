@@ -46,15 +46,28 @@ import type { LiveRecordingInstance } from './recording.js';
 
 /**
  * Event listener type for channel events.
- * @internal
+ *
+ * @typeParam E - The event type
  */
-type ChannelEventListener<E> = (event: E, channel: ChannelInstance) => void | Promise<void>;
+export type ChannelEventListener<E> = (event: E, channel: ChannelInstance) => void | Promise<void>;
 
 /**
  * Map of channel event types to their listener signatures.
- * @internal
+ *
+ * Use this interface to type listener functions for channel events.
+ *
+ * @example
+ * ```typescript
+ * import type { ChannelEventListeners } from '@per_moeller/asterisk-ari';
+ *
+ * const dtmfHandler: ChannelEventListeners['ChannelDtmfReceived'] = (event, channel) => {
+ *   console.log(`Received DTMF ${event.digit} on ${channel.name}`);
+ * };
+ *
+ * channel.on('ChannelDtmfReceived', dtmfHandler);
+ * ```
  */
-interface ChannelEventListeners {
+export interface ChannelEventListeners {
   StasisStart: ChannelEventListener<StasisStartEvent>;
   StasisEnd: ChannelEventListener<StasisEndEvent>;
   ChannelStateChange: ChannelEventListener<ChannelStateChangeEvent>;

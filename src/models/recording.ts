@@ -12,11 +12,32 @@ import type {
   RecordingFailedEvent,
 } from '../events/types.js';
 
-type RecordingEventListener<E> = (event: E, recording: LiveRecordingInstance) => void | Promise<void>;
+/**
+ * Type for recording event listener functions.
+ * The listener receives the event data and the recording instance.
+ * @template E - The event type
+ */
+export type RecordingEventListener<E> = (event: E, recording: LiveRecordingInstance) => void | Promise<void>;
 
-interface RecordingEventListeners {
+/**
+ * Interface defining all recording event listeners with their typed signatures.
+ * Use this to type your listener functions when working with recording events.
+ *
+ * @example
+ * ```typescript
+ * import type { RecordingEventListeners } from '@per_moeller/asterisk-ari';
+ *
+ * const finishedHandler: RecordingEventListeners['RecordingFinished'] = (event, recording) => {
+ *   console.log(`Recording ${recording.name} finished, duration: ${recording.duration}s`);
+ * };
+ * ```
+ */
+export interface RecordingEventListeners {
+  /** Fired when recording starts */
   RecordingStarted: RecordingEventListener<RecordingStartedEvent>;
+  /** Fired when recording finishes successfully */
   RecordingFinished: RecordingEventListener<RecordingFinishedEvent>;
+  /** Fired when recording fails */
   RecordingFailed: RecordingEventListener<RecordingFailedEvent>;
 }
 

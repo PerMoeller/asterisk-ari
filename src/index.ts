@@ -182,6 +182,16 @@ export {
   LiveRecordingInstance,
   StoredRecordingInstance,
 } from './models/index.js';
+export type {
+  ChannelEventListener,
+  ChannelEventListeners,
+  BridgeEventListener,
+  BridgeEventListeners,
+  PlaybackEventListener,
+  PlaybackEventListeners,
+  RecordingEventListener,
+  RecordingEventListeners,
+} from './models/index.js';
 
 // Resources
 export { BaseResource } from './resources/base.js';
