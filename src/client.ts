@@ -1,5 +1,28 @@
 /**
  * ARI Client - Main entry point for Asterisk REST Interface
+ *
+ * This module provides the main `AriClient` class and `connect()` function
+ * for establishing connections to Asterisk ARI.
+ *
+ * @packageDocumentation
+ *
+ * @example
+ * ```typescript
+ * import { connect } from '@per_moeller/asterisk-ari';
+ *
+ * const client = await connect({
+ *   url: 'http://localhost:8088',
+ *   username: 'asterisk',
+ *   password: 'secret',
+ *   app: 'my-app'
+ * });
+ *
+ * client.on('StasisStart', async (event, channel) => {
+ *   console.log(`Incoming call from ${channel.caller.number}`);
+ *   await channel.answer();
+ *   await channel.play({ media: 'sound:hello-world' });
+ * });
+ * ```
  */
 
 import { HttpConnection } from './connection.js';
@@ -33,7 +56,34 @@ import type { Channel, Bridge, Playback, LiveRecording } from './types/api.js';
 type EventListener<T> = (event: T) => void | Promise<void>;
 
 /**
- * ARI Client for interacting with Asterisk
+ * Main ARI Client for interacting with Asterisk.
+ *
+ * The client provides access to all ARI resources (channels, bridges, etc.)
+ * and handles WebSocket events from Asterisk. It extends `AriEventEmitter`
+ * for type-safe event handling.
+ *
+ * @remarks
+ * Don't instantiate this class directly. Use the {@link connect} function instead.
+ *
+ * @example
+ * ```typescript
+ * const client = await connect({ ... });
+ *
+ * // Access API resources
+ * const channels = await client.channels.list();
+ * const bridge = await client.bridges.create({ type: 'mixing' });
+ *
+ * // Listen to events
+ * client.on('StasisStart', (event, channel) => {
+ *   // Handle incoming calls
+ * });
+ *
+ * // Create model instances for event-based programming
+ * const myChannel = client.Channel('channel-id');
+ * myChannel.on('ChannelDtmfReceived', (event) => {
+ *   console.log(`DTMF: ${event.digit}`);
+ * });
+ * ```
  */
 export class AriClient extends AriEventEmitter {
   private readonly options: ResolvedOptions;
@@ -47,20 +97,168 @@ export class AriClient extends AriEventEmitter {
   private readonly playbackInstances: Map<string, PlaybackInstance> = new Map();
   private readonly recordingInstances: Map<string, LiveRecordingInstance> = new Map();
 
+  // ============================================================================
   // API Resources
+  // ============================================================================
+
+  /**
+   * Channels API for managing calls and channels.
+   *
+   * @example
+   * ```typescript
+   * // List all channels
+   * const channels = await client.channels.list();
+   *
+   * // Originate a call
+   * const channel = await client.channels.originate({
+   *   endpoint: 'PJSIP/1000',
+   *   app: 'my-app'
+   * });
+   *
+   * // Answer a channel
+   * await client.channels.answer(channelId);
+   * ```
+   */
   public readonly channels: ChannelsResource;
+
+  /**
+   * Bridges API for managing bridges (conferences, etc.).
+   *
+   * @example
+   * ```typescript
+   * // Create a mixing bridge
+   * const bridge = await client.bridges.create({ type: 'mixing' });
+   *
+   * // Add channels to bridge
+   * await client.bridges.addChannel(bridge.id, { channel: [channel1, channel2] });
+   * ```
+   */
   public readonly bridges: BridgesResource;
+
+  /**
+   * Endpoints API for managing endpoints.
+   *
+   * @example
+   * ```typescript
+   * // List all endpoints
+   * const endpoints = await client.endpoints.list();
+   *
+   * // Get PJSIP endpoints
+   * const pjsipEndpoints = await client.endpoints.listByTech('PJSIP');
+   * ```
+   */
   public readonly endpoints: EndpointsResource;
+
+  /**
+   * Applications API for managing Stasis applications.
+   *
+   * @example
+   * ```typescript
+   * // Get application details
+   * const app = await client.applications.get('my-app');
+   *
+   * // Subscribe to events
+   * await client.applications.subscribe('my-app', { eventSource: 'channel:123' });
+   * ```
+   */
   public readonly applications: ApplicationsResource;
+
+  /**
+   * Asterisk API for system information and management.
+   *
+   * @example
+   * ```typescript
+   * // Get Asterisk info
+   * const info = await client.asterisk.getInfo();
+   * console.log(info.system?.version);
+   *
+   * // Get a global variable
+   * const value = await client.asterisk.getVariable('GLOBALVAR');
+   * ```
+   */
   public readonly asterisk: AsteriskResource;
+
+  /**
+   * Playbacks API for controlling media playback.
+   *
+   * @example
+   * ```typescript
+   * // Control a playback
+   * await client.playbacks.control(playbackId, 'pause');
+   * await client.playbacks.control(playbackId, 'unpause');
+   * await client.playbacks.stop(playbackId);
+   * ```
+   */
   public readonly playbacks: PlaybacksResource;
+
+  /**
+   * Recordings API for managing live and stored recordings.
+   *
+   * @example
+   * ```typescript
+   * // List stored recordings
+   * const recordings = await client.recordings.listStored();
+   *
+   * // Get a stored recording
+   * const recording = await client.recordings.getStored('my-recording');
+   * ```
+   */
   public readonly recordings: RecordingsResource;
+
+  /**
+   * Sounds API for listing available sound files.
+   *
+   * @example
+   * ```typescript
+   * // List all sounds
+   * const sounds = await client.sounds.list();
+   *
+   * // Get sounds for a specific language
+   * const englishSounds = await client.sounds.list({ lang: 'en' });
+   * ```
+   */
   public readonly sounds: SoundsResource;
+
+  /**
+   * Mailboxes API for managing voicemail mailboxes.
+   *
+   * @example
+   * ```typescript
+   * // List mailboxes
+   * const mailboxes = await client.mailboxes.list();
+   *
+   * // Update message counts
+   * await client.mailboxes.update('1000@default', {
+   *   oldMessages: 5,
+   *   newMessages: 2
+   * });
+   * ```
+   */
   public readonly mailboxes: MailboxesResource;
+
+  /**
+   * Device States API for managing custom device states.
+   *
+   * @example
+   * ```typescript
+   * // Set a device state
+   * await client.deviceStates.update('Stasis:mydevice', 'INUSE');
+   *
+   * // Get a device state
+   * const state = await client.deviceStates.get('Stasis:mydevice');
+   * ```
+   */
   public readonly deviceStates: DeviceStatesResource;
 
   /**
-   * @internal - Use connect() function instead
+   * Creates a new ARI client.
+   *
+   * @internal - Use the {@link connect} function instead of instantiating directly.
+   *
+   * @param options - Resolved connection options
+   * @param http - HTTP connection instance
+   * @param ws - WebSocket manager instance
+   * @param versionCompat - Version compatibility checker
    */
   constructor(
     options: ResolvedOptions,
@@ -92,6 +290,7 @@ export class AriClient extends AriEventEmitter {
 
   /**
    * Set up WebSocket event handlers
+   * @internal
    */
   private setupWebSocketEvents(): void {
     this.ws.on('message', (data) => {
@@ -114,17 +313,53 @@ export class AriClient extends AriEventEmitter {
 
   /**
    * Handle an incoming ARI event
+   * @internal
    */
   private handleEvent(event: AriEvent): void {
-    // Emit to global listeners
-    this.emit(event.type as AriEventType, event as AriEventMap[AriEventType]);
+    // Emit to global listeners with convenience argument (ari-client compatibility)
+    const convenienceArg = this.getConvenienceArg(event);
+    this.emit(event.type as AriEventType, event as AriEventMap[AriEventType], convenienceArg);
 
     // Route to specific instances based on event type
     this.routeEventToInstances(event);
   }
 
   /**
+   * Extract convenience instance argument from event for ari-client style callbacks.
+   * Returns instance types (ChannelInstance, BridgeInstance, etc.) with methods.
+   * @internal
+   */
+  private getConvenienceArg(event: AriEvent): unknown {
+    if ('channel' in event && event.channel) {
+      // Return a ChannelInstance with the channel data
+      return this.Channel(event.channel.id, event.channel);
+    }
+    if ('bridge' in event && event.bridge) {
+      // Return a BridgeInstance with the bridge data
+      return this.Bridge(event.bridge.id, event.bridge);
+    }
+    if ('playback' in event && event.playback) {
+      // Return a PlaybackInstance with the playback data
+      return this.Playback(event.playback.id, event.playback);
+    }
+    if ('recording' in event && event.recording) {
+      // Return a LiveRecordingInstance with the recording data
+      return this.LiveRecording(event.recording.name, event.recording);
+    }
+    if ('endpoint' in event && event.endpoint) {
+      // Endpoints don't have an instance class yet, return raw data
+      return event.endpoint;
+    }
+    // Special case for Dial event - return peer channel as instance
+    if (event.type === 'Dial' && 'peer' in event) {
+      return this.Channel(event.peer.id, event.peer);
+    }
+    return undefined;
+  }
+
+  /**
    * Route event to appropriate instance listeners
+   * @internal
    */
   private routeEventToInstances(event: AriEvent): void {
     // Channel events
@@ -169,11 +404,32 @@ export class AriClient extends AriEventEmitter {
   }
 
   // ============================================================================
-  // Instance Factory Methods (like ari-client)
+  // Instance Factory Methods
   // ============================================================================
 
   /**
-   * Create a Channel instance
+   * Create or retrieve a Channel instance.
+   *
+   * Channel instances provide event-based programming for individual channels.
+   * Events are automatically routed to the appropriate instance based on channel ID.
+   *
+   * @param id - Channel ID (auto-generated if not provided)
+   * @param data - Initial channel data
+   * @returns Channel instance for event handling and operations
+   *
+   * @example
+   * ```typescript
+   * // Create a channel instance from an event
+   * client.on('StasisStart', (event, channelData) => {
+   *   const channel = client.Channel(channelData.id, channelData);
+   *
+   *   channel.on('ChannelDtmfReceived', (event) => {
+   *     console.log(`DTMF: ${event.digit}`);
+   *   });
+   *
+   *   await channel.answer();
+   * });
+   * ```
    */
   Channel(id?: string, data?: Partial<Channel>): ChannelInstance {
     const existingId = id || data?.id;
@@ -188,7 +444,23 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Create a Bridge instance
+   * Create or retrieve a Bridge instance.
+   *
+   * Bridge instances provide event-based programming for bridges.
+   *
+   * @param id - Bridge ID (auto-generated if not provided)
+   * @param data - Initial bridge data
+   * @returns Bridge instance for event handling and operations
+   *
+   * @example
+   * ```typescript
+   * const bridge = client.Bridge();
+   * await bridge.create({ type: 'mixing' });
+   *
+   * bridge.on('ChannelEnteredBridge', (event) => {
+   *   console.log(`${event.channel.name} joined the bridge`);
+   * });
+   * ```
    */
   Bridge(id?: string, data?: Partial<Bridge>): BridgeInstance {
     const existingId = id || data?.id;
@@ -203,7 +475,24 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Create a Playback instance
+   * Create or retrieve a Playback instance.
+   *
+   * Playback instances provide event-based programming for media playback.
+   *
+   * @param id - Playback ID (auto-generated if not provided)
+   * @param data - Initial playback data
+   * @returns Playback instance for event handling and operations
+   *
+   * @example
+   * ```typescript
+   * const playback = client.Playback();
+   *
+   * playback.on('PlaybackFinished', (event) => {
+   *   console.log('Playback completed');
+   * });
+   *
+   * await channel.play({ media: 'sound:hello', playbackId: playback.id });
+   * ```
    */
   Playback(id?: string, data?: Partial<Playback>): PlaybackInstance {
     const existingId = id || data?.id;
@@ -218,7 +507,24 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Create a LiveRecording instance
+   * Create or retrieve a LiveRecording instance.
+   *
+   * LiveRecording instances provide event-based programming for active recordings.
+   *
+   * @param name - Recording name
+   * @param data - Initial recording data
+   * @returns LiveRecording instance for event handling and operations
+   *
+   * @example
+   * ```typescript
+   * const recording = client.LiveRecording('my-recording');
+   *
+   * recording.on('RecordingFinished', (event) => {
+   *   console.log(`Recording saved: ${event.recording.name}`);
+   * });
+   *
+   * await channel.record({ name: 'my-recording', format: 'wav' });
+   * ```
    */
   LiveRecording(name: string, data?: Partial<LiveRecording>): LiveRecordingInstance {
     const existing = this.recordingInstances.get(name);
@@ -230,7 +536,25 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Create a StoredRecording instance (no events, just convenience methods)
+   * Create a StoredRecording instance.
+   *
+   * StoredRecording instances provide convenience methods for working with
+   * recordings that are already saved to disk. Unlike LiveRecording, these
+   * don't receive events.
+   *
+   * @param name - Recording name
+   * @returns StoredRecording instance for operations
+   *
+   * @example
+   * ```typescript
+   * const stored = client.StoredRecording('my-recording');
+   *
+   * // Copy the recording
+   * await stored.copy('my-recording-backup');
+   *
+   * // Delete the recording
+   * await stored.delete();
+   * ```
    */
   StoredRecording(name: string): StoredRecordingInstance {
     return new StoredRecordingInstance(this, name);
@@ -240,42 +564,42 @@ export class AriClient extends AriEventEmitter {
   // Instance Registration (internal use by model instances)
   // ============================================================================
 
-  /** @internal */
+  /** @internal Register a channel instance for event routing */
   _registerChannelInstance(id: string, instance: ChannelInstance): void {
     this.channelInstances.set(id, instance);
   }
 
-  /** @internal */
+  /** @internal Unregister a channel instance */
   _unregisterChannelInstance(id: string): void {
     this.channelInstances.delete(id);
   }
 
-  /** @internal */
+  /** @internal Register a bridge instance for event routing */
   _registerBridgeInstance(id: string, instance: BridgeInstance): void {
     this.bridgeInstances.set(id, instance);
   }
 
-  /** @internal */
+  /** @internal Unregister a bridge instance */
   _unregisterBridgeInstance(id: string): void {
     this.bridgeInstances.delete(id);
   }
 
-  /** @internal */
+  /** @internal Register a playback instance for event routing */
   _registerPlaybackInstance(id: string, instance: PlaybackInstance): void {
     this.playbackInstances.set(id, instance);
   }
 
-  /** @internal */
+  /** @internal Unregister a playback instance */
   _unregisterPlaybackInstance(id: string): void {
     this.playbackInstances.delete(id);
   }
 
-  /** @internal */
+  /** @internal Register a recording instance for event routing */
   _registerRecordingInstance(name: string, instance: LiveRecordingInstance): void {
     this.recordingInstances.set(name, instance);
   }
 
-  /** @internal */
+  /** @internal Unregister a recording instance */
   _unregisterRecordingInstance(name: string): void {
     this.recordingInstances.delete(name);
   }
@@ -285,21 +609,47 @@ export class AriClient extends AriEventEmitter {
   // ============================================================================
 
   /**
-   * Get the detected ARI/Asterisk version
+   * Get the detected ARI/Asterisk version compatibility checker.
+   *
+   * @returns Version compatibility object with feature flags
+   *
+   * @example
+   * ```typescript
+   * console.log(client.version.toString());
+   * // "Asterisk 20 (ARI 8.0.0)"
+   *
+   * if (client.version.hasExternalMedia) {
+   *   // Use external media feature
+   * }
+   * ```
    */
   get version(): VersionCompat {
     return this.versionCompat;
   }
 
   /**
-   * Check if WebSocket is connected
+   * Check if the WebSocket connection is active.
+   *
+   * @returns `true` if connected, `false` otherwise
    */
   isConnected(): boolean {
     return this.ws.isConnected();
   }
 
   /**
-   * Stop the client and disconnect
+   * Stop the client and disconnect from Asterisk.
+   *
+   * This closes the WebSocket connection and clears all instance registries.
+   * The client cannot be reused after calling stop().
+   *
+   * @example
+   * ```typescript
+   * // Graceful shutdown
+   * process.on('SIGTERM', () => {
+   *   client.stop();
+   *   process.exit(0);
+   * });
+   * ```
    */
   stop(): void {
     this.ws.disconnect();
@@ -310,7 +660,12 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Reconnect the WebSocket
+   * Reconnect the WebSocket connection.
+   *
+   * Disconnects and then reconnects to Asterisk. Instance registries
+   * are preserved, so events will continue routing correctly.
+   *
+   * @returns Promise that resolves when reconnected
    */
   async reconnect(): Promise<void> {
     this.ws.disconnect();
@@ -318,7 +673,9 @@ export class AriClient extends AriEventEmitter {
   }
 
   /**
-   * Get the application name
+   * Get the Stasis application name.
+   *
+   * @returns Application name used for this connection
    */
   get app(): string {
     return this.options.app;
@@ -326,7 +683,32 @@ export class AriClient extends AriEventEmitter {
 }
 
 /**
- * Connect to Asterisk ARI
+ * Connect to Asterisk ARI and create a client.
+ *
+ * This is the main entry point for establishing an ARI connection.
+ * It performs version detection and sets up the WebSocket connection.
+ *
+ * @param options - Connection options
+ * @returns Promise that resolves to an ARI client
+ * @throws {AriHttpError} If connection fails or authentication is invalid
+ *
+ * @example
+ * ```typescript
+ * import { connect } from '@per_moeller/asterisk-ari';
+ *
+ * const client = await connect({
+ *   url: 'http://localhost:8088',
+ *   username: 'asterisk',
+ *   password: 'secret',
+ *   app: 'my-app'
+ * });
+ *
+ * console.log(`Connected to ${client.version}`);
+ *
+ * client.on('StasisStart', async (event, channel) => {
+ *   await channel.answer();
+ * });
+ * ```
  */
 export async function connect(options: ConnectOptions): Promise<AriClient> {
   const resolved = resolveOptions(options);

@@ -166,10 +166,13 @@ export type {
   BridgeEventType,
   PlaybackEventType,
   RecordingEventType,
+  // Convenience arg type (for typed event listeners)
+  EventConvenienceArg,
 } from './events/types.js';
 
 // Event emitters
 export { TypedEventEmitter, AriEventEmitter, ConnectionEventEmitter } from './events/emitter.js';
+export type { AriEventListener, EventInstanceArg } from './events/emitter.js';
 
 // Model instances
 export {
