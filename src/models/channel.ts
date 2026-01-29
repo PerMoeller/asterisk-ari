@@ -29,6 +29,8 @@ import type {
   ChannelEventType,
   StasisStartEvent,
   StasisEndEvent,
+  ChannelCreatedEvent,
+  ChannelDestroyedEvent,
   ChannelDtmfReceivedEvent,
   ChannelStateChangeEvent,
   ChannelHangupRequestEvent,
@@ -70,6 +72,8 @@ export type ChannelEventListener<E> = (event: E, channel: ChannelInstance) => vo
 export interface ChannelEventListeners {
   StasisStart: ChannelEventListener<StasisStartEvent>;
   StasisEnd: ChannelEventListener<StasisEndEvent>;
+  ChannelCreated: ChannelEventListener<ChannelCreatedEvent>;
+  ChannelDestroyed: ChannelEventListener<ChannelDestroyedEvent>;
   ChannelStateChange: ChannelEventListener<ChannelStateChangeEvent>;
   ChannelDtmfReceived: ChannelEventListener<ChannelDtmfReceivedEvent>;
   ChannelHangupRequest: ChannelEventListener<ChannelHangupRequestEvent>;
