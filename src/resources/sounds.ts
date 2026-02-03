@@ -19,6 +19,7 @@ export class SoundsResource extends BaseResource {
 
   /**
    * List all sounds
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(params?: ListSoundsParams): Promise<Sound[]> {
     return this.http.get<Sound[]>('/sounds', toQueryParams(params));
@@ -26,6 +27,7 @@ export class SoundsResource extends BaseResource {
 
   /**
    * Get a specific sound
+   * @throws {AriHttpError} If the ARI request fails
    */
   async get(soundId: string): Promise<Sound> {
     return this.http.get<Sound>(`/sounds/${encodeURIComponent(soundId)}`);

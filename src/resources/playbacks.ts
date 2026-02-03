@@ -52,6 +52,7 @@ export class PlaybacksResource extends BaseResource {
 
   /**
    * Stop a playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stop(playbackId: string): Promise<void> {
     return this.http.delete<void>(`/playbacks/${encodeURIComponent(playbackId)}`);
@@ -59,6 +60,7 @@ export class PlaybacksResource extends BaseResource {
 
   /**
    * Control a playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async control(playbackId: string, operation: PlaybackOperation): Promise<void> {
     return this.http.post<void>(

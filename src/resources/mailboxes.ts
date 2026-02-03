@@ -19,6 +19,7 @@ export class MailboxesResource extends BaseResource {
 
   /**
    * List all mailboxes
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(): Promise<Mailbox[]> {
     return this.http.get<Mailbox[]>('/mailboxes');
@@ -26,6 +27,7 @@ export class MailboxesResource extends BaseResource {
 
   /**
    * Get a specific mailbox
+   * @throws {AriHttpError} If the ARI request fails
    */
   async get(mailboxName: string): Promise<Mailbox> {
     return this.http.get<Mailbox>(`/mailboxes/${encodeURIComponent(mailboxName)}`);
@@ -33,6 +35,7 @@ export class MailboxesResource extends BaseResource {
 
   /**
    * Update a mailbox
+   * @throws {AriHttpError} If the ARI request fails
    */
   async update(mailboxName: string, params: UpdateMailboxParams): Promise<void> {
     return this.http.put<void>(
@@ -44,6 +47,7 @@ export class MailboxesResource extends BaseResource {
 
   /**
    * Delete a mailbox
+   * @throws {AriHttpError} If the ARI request fails
    */
   async delete(mailboxName: string): Promise<void> {
     return this.http.delete<void>(`/mailboxes/${encodeURIComponent(mailboxName)}`);

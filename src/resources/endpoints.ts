@@ -18,6 +18,7 @@ export class EndpointsResource extends BaseResource {
 
   /**
    * List all endpoints
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(): Promise<Endpoint[]> {
     return this.http.get<Endpoint[]>('/endpoints');
@@ -25,6 +26,7 @@ export class EndpointsResource extends BaseResource {
 
   /**
    * Get all endpoints for a specific technology
+   * @throws {AriHttpError} If the ARI request fails
    */
   async listByTech(tech: string): Promise<Endpoint[]> {
     return this.http.get<Endpoint[]>(`/endpoints/${encodeURIComponent(tech)}`);
@@ -32,6 +34,7 @@ export class EndpointsResource extends BaseResource {
 
   /**
    * Get a specific endpoint
+   * @throws {AriHttpError} If the ARI request fails
    */
   async get(tech: string, resource: string): Promise<Endpoint> {
     return this.http.get<Endpoint>(
@@ -41,6 +44,7 @@ export class EndpointsResource extends BaseResource {
 
   /**
    * Send a message to a specific endpoint
+   * @throws {AriHttpError} If the ARI request fails
    */
   async sendMessage(tech: string, resource: string, message: TextMessage): Promise<void> {
     const { from, to, body, variables } = message;
@@ -59,6 +63,7 @@ export class EndpointsResource extends BaseResource {
 
   /**
    * Send a message to a specific endpoint (using endpoint reference)
+   * @throws {AriHttpError} If the ARI request fails
    */
   async sendMessageToEndpoint(endpoint: string, message: TextMessage): Promise<void> {
     const { from, to, body, variables } = message;
@@ -77,6 +82,7 @@ export class EndpointsResource extends BaseResource {
 
   /**
    * Refer an endpoint to some destination
+   * @throws {AriHttpError} If the ARI request fails
    */
   async refer(tech: string, resource: string, to: string, toSelf?: boolean): Promise<void> {
     return this.http.post<void>(

@@ -19,6 +19,7 @@ export class StoredRecordingsResource extends BaseResource {
 
   /**
    * List all stored recordings
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(): Promise<StoredRecording[]> {
     return this.http.get<StoredRecording[]>('/recordings/stored');
@@ -26,6 +27,7 @@ export class StoredRecordingsResource extends BaseResource {
 
   /**
    * Get a stored recording's details
+   * @throws {AriHttpError} If the ARI request fails
    */
   async get(recordingName: string): Promise<StoredRecording> {
     return this.http.get<StoredRecording>(
@@ -35,6 +37,7 @@ export class StoredRecordingsResource extends BaseResource {
 
   /**
    * Get the file for a stored recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async getFile(recordingName: string): Promise<ArrayBuffer> {
     return this.http.get<ArrayBuffer>(
@@ -44,6 +47,7 @@ export class StoredRecordingsResource extends BaseResource {
 
   /**
    * Copy a stored recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async copy(recordingName: string, params: StoredRecordingCopyParams): Promise<StoredRecording> {
     return this.http.post<StoredRecording>(
@@ -55,6 +59,7 @@ export class StoredRecordingsResource extends BaseResource {
 
   /**
    * Delete a stored recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async delete(recordingName: string): Promise<void> {
     return this.http.delete<void>(`/recordings/stored/${encodeURIComponent(recordingName)}`);
@@ -71,6 +76,7 @@ export class LiveRecordingsResource extends BaseResource {
 
   /**
    * Get a live recording's details
+   * @throws {AriHttpError} If the ARI request fails
    */
   async get(recordingName: string): Promise<LiveRecording> {
     return this.http.get<LiveRecording>(
@@ -80,6 +86,7 @@ export class LiveRecordingsResource extends BaseResource {
 
   /**
    * Stop and store a live recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stop(recordingName: string): Promise<void> {
     return this.http.post<void>(
@@ -89,6 +96,7 @@ export class LiveRecordingsResource extends BaseResource {
 
   /**
    * Pause a live recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async pause(recordingName: string): Promise<void> {
     return this.http.post<void>(
@@ -98,6 +106,7 @@ export class LiveRecordingsResource extends BaseResource {
 
   /**
    * Unpause a live recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unpause(recordingName: string): Promise<void> {
     return this.http.delete<void>(
@@ -107,6 +116,7 @@ export class LiveRecordingsResource extends BaseResource {
 
   /**
    * Mute a live recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async mute(recordingName: string): Promise<void> {
     return this.http.post<void>(
@@ -116,6 +126,7 @@ export class LiveRecordingsResource extends BaseResource {
 
   /**
    * Unmute a live recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unmute(recordingName: string): Promise<void> {
     return this.http.delete<void>(
@@ -125,6 +136,7 @@ export class LiveRecordingsResource extends BaseResource {
 
   /**
    * Cancel and discard a live recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async cancel(recordingName: string): Promise<void> {
     return this.http.delete<void>(

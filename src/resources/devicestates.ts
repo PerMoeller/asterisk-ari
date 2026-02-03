@@ -18,6 +18,7 @@ export class DeviceStatesResource extends BaseResource {
 
   /**
    * List all device states
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(): Promise<DeviceStateResource[]> {
     return this.http.get<DeviceStateResource[]>('/deviceStates');
@@ -25,6 +26,7 @@ export class DeviceStatesResource extends BaseResource {
 
   /**
    * Get a specific device state
+   * @throws {AriHttpError} If the ARI request fails
    */
   async get(deviceName: string): Promise<DeviceStateResource> {
     return this.http.get<DeviceStateResource>(
@@ -34,6 +36,7 @@ export class DeviceStatesResource extends BaseResource {
 
   /**
    * Update a device state
+   * @throws {AriHttpError} If the ARI request fails
    */
   async update(deviceName: string, deviceState: DeviceState): Promise<void> {
     return this.http.put<void>(
@@ -45,6 +48,7 @@ export class DeviceStatesResource extends BaseResource {
 
   /**
    * Delete a device state
+   * @throws {AriHttpError} If the ARI request fails
    */
   async delete(deviceName: string): Promise<void> {
     return this.http.delete<void>(`/deviceStates/${encodeURIComponent(deviceName)}`);

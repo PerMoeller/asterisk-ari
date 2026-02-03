@@ -240,6 +240,7 @@ export class HttpConnection {
    * @param path - API path
    * @param query - Optional query parameters
    * @returns Promise resolving to the response data
+   * @throws {AriHttpError} If the request fails or returns an error status
    */
   async get<T>(path: string, query?: RequestOptions['query']): Promise<T> {
     return this.request<T>(path, { method: 'GET', query });
@@ -253,6 +254,7 @@ export class HttpConnection {
    * @param body - Request body (will be JSON-serialized)
    * @param query - Optional query parameters
    * @returns Promise resolving to the response data
+   * @throws {AriHttpError} If the request fails or returns an error status
    */
   async post<T>(path: string, body?: unknown, query?: RequestOptions['query']): Promise<T> {
     return this.request<T>(path, { method: 'POST', body, query });
@@ -266,6 +268,7 @@ export class HttpConnection {
    * @param body - Request body (will be JSON-serialized)
    * @param query - Optional query parameters
    * @returns Promise resolving to the response data
+   * @throws {AriHttpError} If the request fails or returns an error status
    */
   async put<T>(path: string, body?: unknown, query?: RequestOptions['query']): Promise<T> {
     return this.request<T>(path, { method: 'PUT', body, query });
@@ -278,6 +281,7 @@ export class HttpConnection {
    * @param path - API path
    * @param query - Optional query parameters
    * @returns Promise resolving to the response data
+   * @throws {AriHttpError} If the request fails or returns an error status
    */
   async delete<T>(path: string, query?: RequestOptions['query']): Promise<T> {
     return this.request<T>(path, { method: 'DELETE', query });

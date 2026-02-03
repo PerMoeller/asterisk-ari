@@ -158,6 +158,7 @@ export class PlaybackInstance implements Playback {
 
   /**
    * Stop this playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stop(): Promise<void> {
     return this.client.playbacks.stop(this.id);
@@ -165,6 +166,7 @@ export class PlaybackInstance implements Playback {
 
   /**
    * Control this playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async control(operation: PlaybackOperation): Promise<void> {
     return this.client.playbacks.control(this.id, operation);
@@ -172,6 +174,7 @@ export class PlaybackInstance implements Playback {
 
   /**
    * Pause this playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async pause(): Promise<void> {
     return this.control('pause');
@@ -179,6 +182,7 @@ export class PlaybackInstance implements Playback {
 
   /**
    * Unpause this playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unpause(): Promise<void> {
     return this.control('unpause');
@@ -186,6 +190,7 @@ export class PlaybackInstance implements Playback {
 
   /**
    * Restart this playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async restart(): Promise<void> {
     return this.control('restart');
@@ -193,6 +198,7 @@ export class PlaybackInstance implements Playback {
 
   /**
    * Skip forward in this playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async forward(): Promise<void> {
     return this.control('forward');
@@ -200,6 +206,7 @@ export class PlaybackInstance implements Playback {
 
   /**
    * Skip backward in this playback
+   * @throws {AriHttpError} If the ARI request fails
    */
   async reverse(): Promise<void> {
     return this.control('reverse');

@@ -1,6 +1,6 @@
 {
   "name": "@per_moeller/asterisk-ari",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Modern TypeScript ARI (Asterisk REST Interface) client with WebSocket reconnection and full API coverage",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

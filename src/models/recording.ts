@@ -161,6 +161,7 @@ export class LiveRecordingInstance implements LiveRecording {
 
   /**
    * Stop and store this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stop(): Promise<void> {
     return this.client.recordings.live.stop(this.name);
@@ -168,6 +169,7 @@ export class LiveRecordingInstance implements LiveRecording {
 
   /**
    * Pause this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async pause(): Promise<void> {
     return this.client.recordings.live.pause(this.name);
@@ -175,6 +177,7 @@ export class LiveRecordingInstance implements LiveRecording {
 
   /**
    * Unpause this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unpause(): Promise<void> {
     return this.client.recordings.live.unpause(this.name);
@@ -182,6 +185,7 @@ export class LiveRecordingInstance implements LiveRecording {
 
   /**
    * Mute this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async mute(): Promise<void> {
     return this.client.recordings.live.mute(this.name);
@@ -189,6 +193,7 @@ export class LiveRecordingInstance implements LiveRecording {
 
   /**
    * Unmute this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unmute(): Promise<void> {
     return this.client.recordings.live.unmute(this.name);
@@ -196,6 +201,7 @@ export class LiveRecordingInstance implements LiveRecording {
 
   /**
    * Cancel and discard this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async cancel(): Promise<void> {
     return this.client.recordings.live.cancel(this.name);
@@ -230,6 +236,7 @@ export class StoredRecordingInstance implements StoredRecording {
 
   /**
    * Get the file for this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async getFile(): Promise<ArrayBuffer> {
     return this.client.recordings.stored.getFile(this.name);
@@ -237,6 +244,7 @@ export class StoredRecordingInstance implements StoredRecording {
 
   /**
    * Copy this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async copy(destinationRecordingName: string): Promise<StoredRecordingInstance> {
     const result = await this.client.recordings.stored.copy(this.name, {
@@ -247,6 +255,7 @@ export class StoredRecordingInstance implements StoredRecording {
 
   /**
    * Delete this recording
+   * @throws {AriHttpError} If the ARI request fails
    */
   async delete(): Promise<void> {
     return this.client.recordings.stored.delete(this.name);

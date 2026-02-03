@@ -184,6 +184,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Create this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async create(params?: Omit<CreateBridgeParams, 'bridgeId'>): Promise<void> {
     const result = await this.client.bridges.createOrUpdate(this.id, params);
@@ -192,6 +193,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Destroy this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async destroy(): Promise<void> {
     return this.client.bridges.destroy(this.id);
@@ -199,6 +201,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Add channel(s) to this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async addChannel(params: AddChannelParams): Promise<void> {
     return this.client.bridges.addChannel(this.id, params);
@@ -206,6 +209,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Remove channel(s) from this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async removeChannel(params: RemoveChannelParams): Promise<void> {
     return this.client.bridges.removeChannel(this.id, params);
@@ -213,6 +217,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Set the video source for this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async setVideoSource(channelId: string): Promise<void> {
     return this.client.bridges.setVideoSource(this.id, channelId);
@@ -220,6 +225,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Clear the video source for this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async clearVideoSource(): Promise<void> {
     return this.client.bridges.clearVideoSource(this.id);
@@ -227,6 +233,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Start music on hold for this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async startMoh(mohClass?: string): Promise<void> {
     return this.client.bridges.startMoh(this.id, mohClass);
@@ -234,6 +241,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Stop music on hold for this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stopMoh(): Promise<void> {
     return this.client.bridges.stopMoh(this.id);
@@ -241,6 +249,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Play media to this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async play(params: PlayBridgeParams): Promise<PlaybackInstance> {
     // Create playback instance first to register for events
@@ -254,6 +263,7 @@ export class BridgeInstance implements Bridge {
 
   /**
    * Record audio from this bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async record(params: RecordBridgeParams): Promise<LiveRecordingInstance> {
     // Create recording instance first to register for events

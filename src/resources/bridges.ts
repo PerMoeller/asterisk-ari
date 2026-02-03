@@ -29,6 +29,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * List all active bridges
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(): Promise<Bridge[]> {
     return this.http.get<Bridge[]>('/bridges');
@@ -67,6 +68,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Create a new bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async create(params?: CreateBridgeParams): Promise<Bridge> {
     const { bridgeId, ...rest } = params || {};
@@ -84,6 +86,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Create a bridge or update an existing bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async createOrUpdate(bridgeId: string, params?: Omit<CreateBridgeParams, 'bridgeId'>): Promise<Bridge> {
     return this.http.post<Bridge>(
@@ -95,6 +98,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Destroy a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async destroy(bridgeId: string): Promise<void> {
     return this.http.delete<void>(`/bridges/${encodeURIComponent(bridgeId)}`);
@@ -102,6 +106,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Add channel(s) to a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async addChannel(bridgeId: string, params: AddChannelParams): Promise<void> {
     const { channel, ...rest } = params;
@@ -116,6 +121,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Remove channel(s) from a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async removeChannel(bridgeId: string, params: RemoveChannelParams): Promise<void> {
     const { channel } = params;
@@ -130,6 +136,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Set the video source for a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async setVideoSource(bridgeId: string, channelId: string): Promise<void> {
     return this.http.post<void>(
@@ -139,6 +146,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Clear the video source for a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async clearVideoSource(bridgeId: string): Promise<void> {
     return this.http.delete<void>(`/bridges/${encodeURIComponent(bridgeId)}/videoSource`);
@@ -146,6 +154,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Start music on hold for a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async startMoh(bridgeId: string, mohClass?: string): Promise<void> {
     return this.http.post<void>(
@@ -157,6 +166,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Stop music on hold for a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stopMoh(bridgeId: string): Promise<void> {
     return this.http.delete<void>(`/bridges/${encodeURIComponent(bridgeId)}/moh`);
@@ -164,6 +174,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Play media to a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async play(bridgeId: string, params: PlayBridgeParams): Promise<Playback> {
     const { media, playbackId, ...rest } = params;
@@ -191,6 +202,7 @@ export class BridgesResource extends BaseResource {
 
   /**
    * Record audio from a bridge
+   * @throws {AriHttpError} If the ARI request fails
    */
   async record(bridgeId: string, params: RecordBridgeParams): Promise<LiveRecording> {
     return this.http.post<LiveRecording>(

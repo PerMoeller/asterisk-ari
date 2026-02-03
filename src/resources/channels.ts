@@ -37,6 +37,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * List all active channels
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(): Promise<Channel[]> {
     return this.http.get<Channel[]>('/channels');
@@ -75,6 +76,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Create a new channel (dial out)
+   * @throws {AriHttpError} If the ARI request fails
    */
   async originate(params: OriginateParams): Promise<Channel> {
     const { variables, ...rest } = params;
@@ -90,6 +92,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Create a new channel with a specific ID
+   * @throws {AriHttpError} If the ARI request fails
    */
   async originateWithId(channelId: string, params: OriginateParams): Promise<Channel> {
     const { variables, ...rest } = params;
@@ -104,6 +107,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Create a channel (without dialing)
+   * @throws {AriHttpError} If the ARI request fails
    */
   async create(params: CreateChannelParams): Promise<Channel> {
     const { variables, ...rest } = params;
@@ -118,6 +122,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Hangup a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async hangup(channelId: string, params?: HangupParams): Promise<void> {
     return this.http.delete<void>(`/channels/${encodeURIComponent(channelId)}`, toQueryParams(params));
@@ -125,6 +130,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Continue the channel in the dialplan
+   * @throws {AriHttpError} If the ARI request fails
    */
   async continueInDialplan(channelId: string, params?: ContinueParams): Promise<void> {
     return this.http.post<void>(
@@ -136,6 +142,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Move the channel to a different Stasis application
+   * @throws {AriHttpError} If the ARI request fails
    */
   async move(channelId: string, params: MoveParams): Promise<void> {
     this.validateVersion('move');
@@ -148,6 +155,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Redirect the channel to a different location
+   * @throws {AriHttpError} If the ARI request fails
    */
   async redirect(channelId: string, endpoint: string): Promise<void> {
     return this.http.post<void>(
@@ -159,6 +167,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Answer a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async answer(channelId: string): Promise<void> {
     return this.http.post<void>(`/channels/${encodeURIComponent(channelId)}/answer`);
@@ -166,6 +175,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Indicate ringing to a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async ring(channelId: string): Promise<void> {
     return this.http.post<void>(`/channels/${encodeURIComponent(channelId)}/ring`);
@@ -173,6 +183,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Stop indicating ringing to a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async ringStop(channelId: string): Promise<void> {
     return this.http.delete<void>(`/channels/${encodeURIComponent(channelId)}/ring`);
@@ -180,6 +191,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Send DTMF to a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async sendDTMF(channelId: string, params: DTMFParams): Promise<void> {
     return this.http.post<void>(
@@ -191,6 +203,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Mute a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async mute(channelId: string, direction: 'both' | 'in' | 'out' = 'both'): Promise<void> {
     return this.http.post<void>(
@@ -202,6 +215,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Unmute a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unmute(channelId: string, direction: 'both' | 'in' | 'out' = 'both'): Promise<void> {
     return this.http.delete<void>(
@@ -212,6 +226,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Put a channel on hold
+   * @throws {AriHttpError} If the ARI request fails
    */
   async hold(channelId: string): Promise<void> {
     return this.http.post<void>(`/channels/${encodeURIComponent(channelId)}/hold`);
@@ -219,6 +234,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Remove a channel from hold
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unhold(channelId: string): Promise<void> {
     return this.http.delete<void>(`/channels/${encodeURIComponent(channelId)}/hold`);
@@ -226,6 +242,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Start music on hold for a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async startMoh(channelId: string, mohClass?: string): Promise<void> {
     return this.http.post<void>(
@@ -237,6 +254,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Stop music on hold for a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stopMoh(channelId: string): Promise<void> {
     return this.http.delete<void>(`/channels/${encodeURIComponent(channelId)}/moh`);
@@ -244,6 +262,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Start silence on a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async startSilence(channelId: string): Promise<void> {
     return this.http.post<void>(`/channels/${encodeURIComponent(channelId)}/silence`);
@@ -251,6 +270,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Stop silence on a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stopSilence(channelId: string): Promise<void> {
     return this.http.delete<void>(`/channels/${encodeURIComponent(channelId)}/silence`);
@@ -258,6 +278,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Play media to a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async play(channelId: string, params: PlayParams): Promise<Playback> {
     const { media, playbackId, ...rest } = params;
@@ -285,6 +306,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Record audio from a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async record(channelId: string, params: RecordParams): Promise<LiveRecording> {
     return this.http.post<LiveRecording>(
@@ -296,6 +318,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Get a channel variable
+   * @throws {AriHttpError} If the ARI request fails
    */
   async getVariable(channelId: string, variable: string): Promise<string> {
     const result = await this.http.get<Variable>(
@@ -307,6 +330,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Set a channel variable
+   * @throws {AriHttpError} If the ARI request fails
    */
   async setVariable(channelId: string, variable: string, value?: string): Promise<void> {
     return this.http.post<void>(
@@ -318,6 +342,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Start snooping on a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async snoop(channelId: string, params: SnoopParams): Promise<Channel> {
     const { snoopId, ...rest } = params;
@@ -339,6 +364,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Dial a created channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async dial(channelId: string, params?: DialParams): Promise<void> {
     return this.http.post<void>(
@@ -350,6 +376,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Get RTP statistics for a channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async getRtpStatistics(channelId: string): Promise<RTPstat> {
     return this.http.get<RTPstat>(`/channels/${encodeURIComponent(channelId)}/rtp_statistics`);
@@ -357,6 +384,7 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Create an external media channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async externalMedia(params: ExternalMediaParams): Promise<Channel> {
     this.validateVersion('externalMedia');

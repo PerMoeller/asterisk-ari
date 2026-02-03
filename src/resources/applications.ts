@@ -18,6 +18,7 @@ export class ApplicationsResource extends BaseResource {
 
   /**
    * List all applications
+   * @throws {AriHttpError} If the ARI request fails
    */
   async list(): Promise<Application[]> {
     return this.http.get<Application[]>('/applications');
@@ -25,6 +26,7 @@ export class ApplicationsResource extends BaseResource {
 
   /**
    * Get a specific application
+   * @throws {AriHttpError} If the ARI request fails
    */
   async get(applicationName: string): Promise<Application> {
     return this.http.get<Application>(`/applications/${encodeURIComponent(applicationName)}`);
@@ -32,6 +34,7 @@ export class ApplicationsResource extends BaseResource {
 
   /**
    * Subscribe to events for specific resources
+   * @throws {AriHttpError} If the ARI request fails
    */
   async subscribe(applicationName: string, eventSource: string | string[]): Promise<Application> {
     const sources = Array.isArray(eventSource) ? eventSource : [eventSource];
@@ -45,6 +48,7 @@ export class ApplicationsResource extends BaseResource {
 
   /**
    * Unsubscribe from events for specific resources
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unsubscribe(applicationName: string, eventSource: string | string[]): Promise<Application> {
     const sources = Array.isArray(eventSource) ? eventSource : [eventSource];
@@ -57,6 +61,7 @@ export class ApplicationsResource extends BaseResource {
 
   /**
    * Filter application events for a specific event type
+   * @throws {AriHttpError} If the ARI request fails
    */
   async filter(applicationName: string, filter?: { allowed?: string[]; disallowed?: string[] }): Promise<Application> {
     return this.http.put<Application>(

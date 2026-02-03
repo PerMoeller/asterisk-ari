@@ -20,6 +20,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Get Asterisk system information
+   * @throws {AriHttpError} If the ARI request fails
    */
   async getInfo(only?: AsteriskInfoFilter[]): Promise<AsteriskInfo> {
     return this.http.get<AsteriskInfo>('/asterisk/info', {
@@ -29,6 +30,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * List Asterisk modules
+   * @throws {AriHttpError} If the ARI request fails
    */
   async listModules(): Promise<Module[]> {
     return this.http.get<Module[]>('/asterisk/modules');
@@ -36,6 +38,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Get a specific Asterisk module
+   * @throws {AriHttpError} If the ARI request fails
    */
   async getModule(moduleName: string): Promise<Module> {
     return this.http.get<Module>(`/asterisk/modules/${encodeURIComponent(moduleName)}`);
@@ -43,6 +46,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Load an Asterisk module
+   * @throws {AriHttpError} If the ARI request fails
    */
   async loadModule(moduleName: string): Promise<void> {
     return this.http.post<void>(`/asterisk/modules/${encodeURIComponent(moduleName)}`);
@@ -50,6 +54,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Unload an Asterisk module
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unloadModule(moduleName: string): Promise<void> {
     return this.http.delete<void>(`/asterisk/modules/${encodeURIComponent(moduleName)}`);
@@ -57,6 +62,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Reload an Asterisk module
+   * @throws {AriHttpError} If the ARI request fails
    */
   async reloadModule(moduleName: string): Promise<void> {
     return this.http.put<void>(`/asterisk/modules/${encodeURIComponent(moduleName)}`);
@@ -64,6 +70,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * List logging channels
+   * @throws {AriHttpError} If the ARI request fails
    */
   async listLogChannels(): Promise<LogChannel[]> {
     return this.http.get<LogChannel[]>('/asterisk/logging');
@@ -71,6 +78,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Add a logging channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async addLogChannel(logChannelName: string, configuration: string): Promise<void> {
     return this.http.post<void>(
@@ -82,6 +90,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Delete a logging channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async deleteLogChannel(logChannelName: string): Promise<void> {
     return this.http.delete<void>(`/asterisk/logging/${encodeURIComponent(logChannelName)}`);
@@ -89,6 +98,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Rotate a log channel
+   * @throws {AriHttpError} If the ARI request fails
    */
   async rotateLogChannel(logChannelName: string): Promise<void> {
     return this.http.put<void>(`/asterisk/logging/${encodeURIComponent(logChannelName)}/rotate`);
@@ -96,6 +106,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Get a global variable
+   * @throws {AriHttpError} If the ARI request fails
    */
   async getGlobalVariable(variable: string): Promise<string> {
     const result = await this.http.get<Variable>('/asterisk/variable', { variable });
@@ -104,6 +115,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Set a global variable
+   * @throws {AriHttpError} If the ARI request fails
    */
   async setGlobalVariable(variable: string, value?: string): Promise<void> {
     return this.http.post<void>('/asterisk/variable', undefined, { variable, value });
@@ -111,6 +123,7 @@ export class AsteriskResource extends BaseResource {
 
   /**
    * Ping Asterisk
+   * @throws {AriHttpError} If the ARI request fails
    */
   async ping(): Promise<{ ping: string; timestamp: string; asterisk_id: string }> {
     return this.http.get('/asterisk/ping');

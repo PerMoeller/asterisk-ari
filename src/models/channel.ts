@@ -342,6 +342,7 @@ export class ChannelInstance implements Channel {
    * Originate a call to this channel.
    *
    * @param params - Originate parameters (channelId is automatically set)
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -360,6 +361,8 @@ export class ChannelInstance implements Channel {
   /**
    * Answer this channel.
    *
+   * @throws {AriHttpError} If the ARI request fails
+   *
    * @example
    * ```typescript
    * client.on('StasisStart', async (event, channel) => {
@@ -375,6 +378,7 @@ export class ChannelInstance implements Channel {
    * Hang up this channel.
    *
    * @param params - Optional hangup parameters with reason code
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -393,6 +397,7 @@ export class ChannelInstance implements Channel {
    * Continue this channel in the dialplan.
    *
    * @param params - Optional dialplan location
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -411,6 +416,7 @@ export class ChannelInstance implements Channel {
    * Move this channel to a different Stasis application.
    *
    * @param params - Target application and arguments
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -428,6 +434,7 @@ export class ChannelInstance implements Channel {
    * Redirect this channel to a different endpoint.
    *
    * @param endpoint - Target endpoint
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -440,6 +447,8 @@ export class ChannelInstance implements Channel {
 
   /**
    * Indicate ringing to this channel.
+   *
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -455,6 +464,7 @@ export class ChannelInstance implements Channel {
 
   /**
    * Stop indicating ringing to this channel.
+   * @throws {AriHttpError} If the ARI request fails
    */
   async ringStop(): Promise<void> {
     return this.client.channels.ringStop(this.id);
@@ -464,6 +474,7 @@ export class ChannelInstance implements Channel {
    * Send DTMF tones to this channel.
    *
    * @param params - DTMF digits and timing parameters
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -481,6 +492,7 @@ export class ChannelInstance implements Channel {
    * Mute this channel.
    *
    * @param direction - Direction to mute ('both', 'in', or 'out')
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -497,6 +509,7 @@ export class ChannelInstance implements Channel {
    * Unmute this channel.
    *
    * @param direction - Direction to unmute ('both', 'in', or 'out')
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unmute(direction: 'both' | 'in' | 'out' = 'both'): Promise<void> {
     return this.client.channels.unmute(this.id, direction);
@@ -504,6 +517,8 @@ export class ChannelInstance implements Channel {
 
   /**
    * Put this channel on hold.
+   *
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -518,6 +533,7 @@ export class ChannelInstance implements Channel {
 
   /**
    * Remove this channel from hold.
+   * @throws {AriHttpError} If the ARI request fails
    */
   async unhold(): Promise<void> {
     return this.client.channels.unhold(this.id);
@@ -527,6 +543,7 @@ export class ChannelInstance implements Channel {
    * Start music on hold for this channel.
    *
    * @param mohClass - Optional music on hold class
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -541,6 +558,7 @@ export class ChannelInstance implements Channel {
 
   /**
    * Stop music on hold for this channel.
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stopMoh(): Promise<void> {
     return this.client.channels.stopMoh(this.id);
@@ -548,6 +566,7 @@ export class ChannelInstance implements Channel {
 
   /**
    * Start silence on this channel.
+   * @throws {AriHttpError} If the ARI request fails
    */
   async startSilence(): Promise<void> {
     return this.client.channels.startSilence(this.id);
@@ -555,6 +574,7 @@ export class ChannelInstance implements Channel {
 
   /**
    * Stop silence on this channel.
+   * @throws {AriHttpError} If the ARI request fails
    */
   async stopSilence(): Promise<void> {
     return this.client.channels.stopSilence(this.id);
@@ -567,6 +587,7 @@ export class ChannelInstance implements Channel {
    *
    * @param params - Play parameters (media URI, language, etc.)
    * @returns Playback instance
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -596,6 +617,7 @@ export class ChannelInstance implements Channel {
    *
    * @param params - Record parameters (name, format, etc.)
    * @returns LiveRecording instance
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -623,6 +645,7 @@ export class ChannelInstance implements Channel {
    *
    * @param variable - Variable name to get
    * @returns Variable value
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -639,6 +662,7 @@ export class ChannelInstance implements Channel {
    *
    * @param variable - Variable name to set
    * @param value - Variable value (undefined to unset)
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -654,6 +678,7 @@ export class ChannelInstance implements Channel {
    *
    * @param params - Snoop parameters (spy/whisper direction, app, etc.)
    * @returns Channel instance for the snoop channel
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -677,6 +702,7 @@ export class ChannelInstance implements Channel {
    * Dial this channel (for channels created with create() instead of originate).
    *
    * @param params - Optional dial parameters
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
@@ -697,6 +723,7 @@ export class ChannelInstance implements Channel {
    * Get RTP statistics for this channel.
    *
    * @returns RTP statistics including jitter, packet loss, RTT
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript

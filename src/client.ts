@@ -450,6 +450,7 @@ export class AriClient extends AriEventEmitter {
    *
    * @param params - Bridge creation parameters (type, name, bridgeId)
    * @returns Bridge instance for event handling and operations
+   * @throws {AriHttpError} If the ARI request fails
    *
    * @example
    * ```typescript
