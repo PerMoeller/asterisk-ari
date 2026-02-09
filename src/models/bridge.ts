@@ -19,6 +19,8 @@ import type {
   BridgeDestroyedEvent,
   BridgeMergedEvent,
   BridgeVideoSourceChangedEvent,
+  BridgeBlindTransferEvent,
+  BridgeAttendedTransferEvent,
   ChannelEnteredBridgeEvent,
   ChannelLeftBridgeEvent,
 } from '../events/types.js';
@@ -54,6 +56,10 @@ export interface BridgeEventListeners {
   BridgeMerged: BridgeEventListener<BridgeMergedEvent>;
   /** Fired when the video source for a bridge changes */
   BridgeVideoSourceChanged: BridgeEventListener<BridgeVideoSourceChangedEvent>;
+  /** Fired when a blind transfer is performed on the bridge */
+  BridgeBlindTransfer: BridgeEventListener<BridgeBlindTransferEvent>;
+  /** Fired when an attended transfer is performed on the bridge */
+  BridgeAttendedTransfer: BridgeEventListener<BridgeAttendedTransferEvent>;
   /** Fired when a channel enters the bridge */
   ChannelEnteredBridge: BridgeEventListener<ChannelEnteredBridgeEvent>;
   /** Fired when a channel leaves the bridge */

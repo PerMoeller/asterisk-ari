@@ -49,7 +49,7 @@ export interface BaseEvent {
  *
  * @example
  * ```typescript
- * client.on('StasisStart', (event, channel) => {
+ * client.on('StasisStart', async (event, channel) => {
  *   console.log(`Call from ${channel.caller.number}`);
  *   console.log(`Application args: ${event.args.join(', ')}`);
  *   await channel.answer();

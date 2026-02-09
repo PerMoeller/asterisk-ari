@@ -78,7 +78,7 @@ export class ChannelsResource extends BaseResource {
    * Create a new channel (dial out)
    * @throws {AriHttpError} If the ARI request fails
    */
-  async originate(params: OriginateParams): Promise<Channel> {
+  async originate(params: OriginateParams): Promise<ChannelInstance> {
     const { variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
 
@@ -87,14 +87,15 @@ export class ChannelsResource extends BaseResource {
       query['variables'] = JSON.stringify(variables);
     }
 
-    return this.http.post<Channel>('/channels', undefined, query);
+    const data = await this.http.post<Channel>('/channels', undefined, query);
+    return this.client.Channel(data.id, data);
   }
 
   /**
    * Create a new channel with a specific ID
    * @throws {AriHttpError} If the ARI request fails
    */
-  async originateWithId(channelId: string, params: OriginateParams): Promise<Channel> {
+  async originateWithId(channelId: string, params: OriginateParams): Promise<ChannelInstance> {
     const { variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
 
@@ -102,14 +103,15 @@ export class ChannelsResource extends BaseResource {
       query['variables'] = JSON.stringify(variables);
     }
 
-    return this.http.post<Channel>(`/channels/${encodeURIComponent(channelId)}`, undefined, query);
+    const data = await this.http.post<Channel>(`/channels/${encodeURIComponent(channelId)}`, undefined, query);
+    return this.client.Channel(data.id, data);
   }
 
   /**
    * Create a channel (without dialing)
    * @throws {AriHttpError} If the ARI request fails
    */
-  async create(params: CreateChannelParams): Promise<Channel> {
+  async create(params: CreateChannelParams): Promise<ChannelInstance> {
     const { variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
 
@@ -117,7 +119,8 @@ export class ChannelsResource extends BaseResource {
       query['variables'] = JSON.stringify(variables);
     }
 
-    return this.http.post<Channel>('/channels/create', undefined, query);
+    const data = await this.http.post<Channel>('/channels/create', undefined, query);
+    return this.client.Channel(data.id, data);
   }
 
   /**
@@ -344,22 +347,25 @@ export class ChannelsResource extends BaseResource {
    * Start snooping on a channel
    * @throws {AriHttpError} If the ARI request fails
    */
-  async snoop(channelId: string, params: SnoopParams): Promise<Channel> {
+  async snoop(channelId: string, params: SnoopParams): Promise<ChannelInstance> {
     const { snoopId, ...rest } = params;
 
+    let data: Channel;
     if (snoopId) {
-      return this.http.post<Channel>(
+      data = await this.http.post<Channel>(
         `/channels/${encodeURIComponent(channelId)}/snoop/${encodeURIComponent(snoopId)}`,
+        undefined,
+        toQueryParams(rest)
+      );
+    } else {
+      data = await this.http.post<Channel>(
+        `/channels/${encodeURIComponent(channelId)}/snoop`,
         undefined,
         toQueryParams(rest)
       );
     }
 
-    return this.http.post<Channel>(
-      `/channels/${encodeURIComponent(channelId)}/snoop`,
-      undefined,
-      toQueryParams(rest)
-    );
+    return this.client.Channel(data.id, data);
   }
 
   /**
@@ -386,7 +392,7 @@ export class ChannelsResource extends BaseResource {
    * Create an external media channel
    * @throws {AriHttpError} If the ARI request fails
    */
-  async externalMedia(params: ExternalMediaParams): Promise<Channel> {
+  async externalMedia(params: ExternalMediaParams): Promise<ChannelInstance> {
     this.validateVersion('externalMedia');
     const { channelId, variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
@@ -395,14 +401,17 @@ export class ChannelsResource extends BaseResource {
       query['variables'] = JSON.stringify(variables);
     }
 
+    let data: Channel;
     if (channelId) {
-      return this.http.post<Channel>(
+      data = await this.http.post<Channel>(
         `/channels/externalMedia/${encodeURIComponent(channelId)}`,
         undefined,
         query
       );
+    } else {
+      data = await this.http.post<Channel>('/channels/externalMedia', undefined, query);
     }
 
-    return this.http.post<Channel>('/channels/externalMedia', undefined, query);
+    return this.client.Channel(data.id, data);
   }
 }
