@@ -398,7 +398,6 @@ export class ChannelsResource extends BaseResource {
     } else {
       data = await this.http.post<Channel>('/channels/externalMedia', body, query);
     }
-
     return this.client.Channel(data.id, data);
   }
 }
