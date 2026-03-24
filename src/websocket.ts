@@ -193,11 +193,16 @@ export class WebSocketManager extends ConnectionEventEmitter {
     this.emit('reconnecting', { attempt: this.reconnectAttempts, delay });
 
     this.reconnectTimer = setTimeout(async () => {
+      // Reset the flag BEFORE connecting so that if this attempt fails and
+      // the 'close' event fires, scheduleReconnect() is not blocked by the
+      // stale reconnecting=true guard.
+      this.reconnecting = false;
       try {
         await this.connect();
         this.emit('reconnected', undefined);
       } catch (error) {
-        // Will trigger another reconnect via the close handler
+        // 'close' will fire after the error and trigger the next retry via
+        // the close handler → scheduleReconnect().
         console.error('Reconnection failed:', error);
       }
     }, delay);

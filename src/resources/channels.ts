@@ -397,21 +397,15 @@ export class ChannelsResource extends BaseResource {
     const { channelId, variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
 
+    if (channelId) {
+      query['channelId'] = channelId;
+    }
+
     if (variables) {
       query['variables'] = JSON.stringify(variables);
     }
 
-    let data: Channel;
-    if (channelId) {
-      data = await this.http.post<Channel>(
-        `/channels/externalMedia/${encodeURIComponent(channelId)}`,
-        undefined,
-        query
-      );
-    } else {
-      data = await this.http.post<Channel>('/channels/externalMedia', undefined, query);
-    }
-
+    const data = await this.http.post<Channel>('/channels/externalMedia', undefined, query);
     return this.client.Channel(data.id, data);
   }
 }
