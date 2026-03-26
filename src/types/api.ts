@@ -529,6 +529,8 @@ export interface ExternalMediaParams {
   direction?: 'both' | 'read' | 'write';
   /** Additional protocol-specific data */
   data?: string;
+  /** Transport-specific data (e.g., for AudioSocket) */
+  transport_data?: string;
   /** Channel variables to set */
   variables?: Record<string, string>;
 }
@@ -649,13 +651,19 @@ export interface RemoveChannelParams {
  * Parameters for playing media to a bridge.
  * @see PlayParams
  */
-export interface PlayBridgeParams extends PlayParams {}
+export interface PlayBridgeParams extends PlayParams {
+  /** Media format used for the announcer channel (e.g., "ulaw", "slin16") */
+  announcer_format?: string;
+}
 
 /**
  * Parameters for recording a bridge.
  * @see RecordParams
  */
-export interface RecordBridgeParams extends RecordParams {}
+export interface RecordBridgeParams extends RecordParams {
+  /** Media format used for the recorder channel (e.g., "ulaw", "slin16") */
+  recorder_format?: string;
+}
 
 // ============================================================================
 // Endpoint Types
@@ -707,6 +715,28 @@ export interface TextMessage {
   /** Message content */
   body: string;
   /** Additional message variables */
+  variables?: Record<string, string>;
+}
+
+/**
+ * Parameters for referring an endpoint to a destination.
+ *
+ * @example
+ * ```typescript
+ * await client.endpoints.refer("pjsip", "1000", {
+ *   from: "pjsip:100",
+ *   refer_to: "pjsip:200",
+ * });
+ * ```
+ */
+export interface ReferParams {
+  /** Technology-specific URI specifying the source */
+  from: string;
+  /** URI to refer the endpoint to */
+  refer_to: string;
+  /** If true, refer to the endpoint itself */
+  to_self?: boolean;
+  /** Technology-specific key/value pairs */
   variables?: Record<string, string>;
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@per_moeller/asterisk-ari",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Modern TypeScript ARI (Asterisk REST Interface) client with WebSocket reconnection and full API coverage",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,17 +39,17 @@
     "url": "https://github.com/PerMoeller/asterisk-ari.git"
   },
   "dependencies": {
-    "ws": "8.19.0"
+    "ws": "8.20.0"
   },
   "devDependencies": {
-    "@types/node": "25.3.3",
+    "@types/node": "25.5.0",
     "@types/ws": "8.18.1",
-    "@typescript-eslint/eslint-plugin": "8.56.1",
-    "@typescript-eslint/parser": "8.56.1",
-    "eslint": "10.0.2",
+    "@typescript-eslint/eslint-plugin": "8.57.2",
+    "@typescript-eslint/parser": "8.57.2",
+    "eslint": "10.1.0",
     "prettier": "3.8.1",
     "typescript": "5.9.3",
-    "vitest": "4.0.18"
+    "vitest": "4.1.1"
   },
   "files": [
     "dist",

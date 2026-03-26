@@ -67,6 +67,7 @@ export type {
   Endpoint,
   EndpointState,
   TextMessage,
+  ReferParams,
   // Application
   Application,
   SubscribeParams,

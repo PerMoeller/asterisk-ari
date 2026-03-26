@@ -6,7 +6,7 @@ import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import type { VersionCompat } from '../version.js';
 import type { AriClient } from '../client.js';
-import type { Endpoint, TextMessage } from '../types/api.js';
+import type { Endpoint, TextMessage, ReferParams } from '../types/api.js';
 
 /**
  * Endpoints API - Manage endpoints (phones, trunks, etc.)
@@ -47,16 +47,14 @@ export class EndpointsResource extends BaseResource {
    * @throws {AriHttpError} If the ARI request fails
    */
   async sendMessage(tech: string, resource: string, message: TextMessage): Promise<void> {
-    const { from, to, body, variables } = message;
+    const { from, body, variables } = message;
 
     return this.http.put<void>(
       `/endpoints/${encodeURIComponent(tech)}/${encodeURIComponent(resource)}/sendMessage`,
-      undefined,
+      variables ? { variables } : undefined,
       {
         from,
-        to,
         body,
-        variables: variables ? JSON.stringify(variables) : undefined,
       }
     );
   }
@@ -70,25 +68,42 @@ export class EndpointsResource extends BaseResource {
 
     return this.http.put<void>(
       '/endpoints/sendMessage',
-      undefined,
+      variables ? { variables } : undefined,
       {
         to: endpoint,
         from,
         body,
-        variables: variables ? JSON.stringify(variables) : undefined,
       }
     );
   }
 
   /**
-   * Refer an endpoint to some destination
+   * Refer a specific endpoint to some destination
    * @throws {AriHttpError} If the ARI request fails
    */
-  async refer(tech: string, resource: string, to: string, toSelf?: boolean): Promise<void> {
+  async refer(tech: string, resource: string, params: ReferParams): Promise<void> {
+    const { variables, ...rest } = params;
+    const body = variables ? { variables } : undefined;
+
     return this.http.post<void>(
       `/endpoints/${encodeURIComponent(tech)}/${encodeURIComponent(resource)}/refer`,
-      undefined,
-      { to, to_self: toSelf }
+      body,
+      rest
+    );
+  }
+
+  /**
+   * Refer an endpoint to some destination (using endpoint reference)
+   * @throws {AriHttpError} If the ARI request fails
+   */
+  async referToEndpoint(endpoint: string, params: ReferParams): Promise<void> {
+    const { variables, ...rest } = params;
+    const body = variables ? { variables } : undefined;
+
+    return this.http.post<void>(
+      '/endpoints/refer',
+      body,
+      { to: endpoint, ...rest }
     );
   }
 }

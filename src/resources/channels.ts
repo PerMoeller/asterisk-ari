@@ -81,13 +81,9 @@ export class ChannelsResource extends BaseResource {
   async originate(params: OriginateParams): Promise<ChannelInstance> {
     const { variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
+    const body = variables ? { variables } : undefined;
 
-    // Handle variables as JSON
-    if (variables) {
-      query['variables'] = JSON.stringify(variables);
-    }
-
-    const data = await this.http.post<Channel>('/channels', undefined, query);
+    const data = await this.http.post<Channel>('/channels', body, query);
     return this.client.Channel(data.id, data);
   }
 
@@ -98,12 +94,9 @@ export class ChannelsResource extends BaseResource {
   async originateWithId(channelId: string, params: OriginateParams): Promise<ChannelInstance> {
     const { variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
+    const body = variables ? { variables } : undefined;
 
-    if (variables) {
-      query['variables'] = JSON.stringify(variables);
-    }
-
-    const data = await this.http.post<Channel>(`/channels/${encodeURIComponent(channelId)}`, undefined, query);
+    const data = await this.http.post<Channel>(`/channels/${encodeURIComponent(channelId)}`, body, query);
     return this.client.Channel(data.id, data);
   }
 
@@ -114,12 +107,9 @@ export class ChannelsResource extends BaseResource {
   async create(params: CreateChannelParams): Promise<ChannelInstance> {
     const { variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
+    const body = variables ? { variables } : undefined;
 
-    if (variables) {
-      query['variables'] = JSON.stringify(variables);
-    }
-
-    const data = await this.http.post<Channel>('/channels/create', undefined, query);
+    const data = await this.http.post<Channel>('/channels/create', body, query);
     return this.client.Channel(data.id, data);
   }
 
@@ -396,20 +386,17 @@ export class ChannelsResource extends BaseResource {
     this.validateVersion('externalMedia');
     const { channelId, variables, ...rest } = params;
     const query: Record<string, string | number | undefined> = { ...rest };
-
-    if (variables) {
-      query['variables'] = JSON.stringify(variables);
-    }
+    const body = variables ? { variables } : undefined;
 
     let data: Channel;
     if (channelId) {
       data = await this.http.post<Channel>(
         `/channels/externalMedia/${encodeURIComponent(channelId)}`,
-        undefined,
+        body,
         query
       );
     } else {
-      data = await this.http.post<Channel>('/channels/externalMedia', undefined, query);
+      data = await this.http.post<Channel>('/channels/externalMedia', body, query);
     }
 
     return this.client.Channel(data.id, data);
