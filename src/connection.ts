@@ -207,13 +207,18 @@ export class HttpConnection {
         return undefined as T;
       }
 
-      // Parse JSON response
+      // Parse response based on content type
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('application/json')) {
         return await response.json() as T;
       }
 
-      // Return text for non-JSON responses
+      // Return binary data for non-text content types
+      if (contentType && !contentType.startsWith('text/')) {
+        return await response.arrayBuffer() as T;
+      }
+
+      // Return text for text responses
       return await response.text() as T;
     } catch (error) {
       clearTimeout(timeoutId);
