@@ -84,6 +84,7 @@ export class BridgeInstance implements Bridge {
 
   private readonly client: AriClient;
   private readonly listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
+  private readonly onceWrappers: Map<(...args: unknown[]) => void, (...args: unknown[]) => void> = new Map();
 
   constructor(client: AriClient, id?: string, data?: Partial<Bridge>) {
     this.client = client;
@@ -137,10 +138,14 @@ export class BridgeInstance implements Bridge {
     listener: BridgeEventListeners[K]
   ): this {
     const wrappedListener = ((...args: unknown[]) => {
-      this.off(event, wrappedListener as BridgeEventListeners[K]);
+      this.off(event, listener);
       (listener as (...args: unknown[]) => void)(...args);
     }) as BridgeEventListeners[K];
 
+    this.onceWrappers.set(
+      listener as (...args: unknown[]) => void,
+      wrappedListener as (...args: unknown[]) => void
+    );
     return this.on(event, wrappedListener);
   }
 
@@ -153,7 +158,14 @@ export class BridgeInstance implements Bridge {
   ): this {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
-      eventListeners.delete(listener as (...args: unknown[]) => void);
+      const listenerFn = listener as (...args: unknown[]) => void;
+      const wrappedListener = this.onceWrappers.get(listenerFn);
+      if (wrappedListener) {
+        eventListeners.delete(wrappedListener);
+        this.onceWrappers.delete(listenerFn);
+      } else {
+        eventListeners.delete(listenerFn);
+      }
     }
     return this;
   }
@@ -180,6 +192,7 @@ export class BridgeInstance implements Bridge {
    */
   removeAllListeners(): this {
     this.listeners.clear();
+    this.onceWrappers.clear();
     this.client._unregisterBridgeInstance(this.id);
     return this;
   }

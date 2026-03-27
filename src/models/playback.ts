@@ -56,6 +56,7 @@ export class PlaybackInstance implements Playback {
 
   private readonly client: AriClient;
   private readonly listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
+  private readonly onceWrappers: Map<(...args: unknown[]) => void, (...args: unknown[]) => void> = new Map();
 
   constructor(client: AriClient, id?: string, data?: Partial<Playback>) {
     this.client = client;
@@ -105,10 +106,14 @@ export class PlaybackInstance implements Playback {
     listener: PlaybackEventListeners[K]
   ): this {
     const wrappedListener = ((...args: unknown[]) => {
-      this.off(event, wrappedListener as PlaybackEventListeners[K]);
+      this.off(event, listener);
       (listener as (...args: unknown[]) => void)(...args);
     }) as PlaybackEventListeners[K];
 
+    this.onceWrappers.set(
+      listener as (...args: unknown[]) => void,
+      wrappedListener as (...args: unknown[]) => void
+    );
     return this.on(event, wrappedListener);
   }
 
@@ -121,7 +126,15 @@ export class PlaybackInstance implements Playback {
   ): this {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
-      eventListeners.delete(listener as (...args: unknown[]) => void);
+      const listenerFn = listener as (...args: unknown[]) => void;
+      // Check if this was registered via once() and remove the wrapper instead
+      const wrappedListener = this.onceWrappers.get(listenerFn);
+      if (wrappedListener) {
+        eventListeners.delete(wrappedListener);
+        this.onceWrappers.delete(listenerFn);
+      } else {
+        eventListeners.delete(listenerFn);
+      }
     }
     return this;
   }
@@ -148,6 +161,7 @@ export class PlaybackInstance implements Playback {
    */
   removeAllListeners(): this {
     this.listeners.clear();
+    this.onceWrappers.clear();
     this.client._unregisterPlaybackInstance(this.id);
     return this;
   }
