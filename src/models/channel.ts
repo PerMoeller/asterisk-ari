@@ -313,10 +313,15 @@ export class ChannelInstance implements Channel {
    *
    * @internal - Called by the client when routing events
    */
+  /** @internal */
+  _listenerCount(event: string): number {
+    return this.listeners.get(event)?.size ?? 0;
+  }
+
   _emit<K extends ChannelEventType>(event: K, data: AriEventMap[K]): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
-      for (const listener of eventListeners) {
+      for (const listener of [...eventListeners]) {
         try {
           listener(data, this);
         } catch (error) {

@@ -26,6 +26,8 @@ export interface ConnectOptions {
   pingTimeout?: number;
   /** HTTP request timeout in ms (default: 30000) */
   requestTimeout?: number;
+  /** Enable debug logging for event routing (default: false) */
+  debug?: boolean;
 }
 
 /**
@@ -44,12 +46,14 @@ export interface ResolvedOptions {
   pingInterval: number;
   pingTimeout: number;
   requestTimeout: number;
+  debug: boolean;
 }
 
 /**
  * Default connection options
  */
 export const DEFAULT_OPTIONS: Omit<ResolvedOptions, 'url' | 'username' | 'password' | 'app'> = {
+  debug: false,
   subscribeAll: false,
   reconnect: true,
   reconnectInterval: 1000,

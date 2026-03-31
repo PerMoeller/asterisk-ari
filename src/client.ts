@@ -318,7 +318,11 @@ export class AriClient extends AriEventEmitter {
   private handleEvent(event: AriEvent): void {
     // Emit to global listeners with convenience argument (ari-client compatibility)
     const convenienceArg = this.getConvenienceArg(event);
-    this.emit(event.type as AriEventType, event as AriEventMap[AriEventType], convenienceArg);
+    try {
+      this.emit(event.type as AriEventType, event as AriEventMap[AriEventType], convenienceArg);
+    } catch (error) {
+      console.error(`Error in global listener for ${event.type}:`, error);
+    }
 
     // Route to specific instances based on event type
     this.routeEventToInstances(event);
@@ -367,8 +371,13 @@ export class AriClient extends AriEventEmitter {
       const channelId = event.channel.id;
       const instance = this.channelInstances.get(channelId);
       if (instance) {
+        if (this.options.debug) {
+          console.debug(`[ARI] Routing ${event.type} to channel ${channelId} (listeners: ${instance._listenerCount(event.type)})`);
+        }
         instance.updateData(event.channel);
         instance._emit(event.type as Parameters<typeof instance._emit>[0], event as never);
+      } else if (this.options.debug) {
+        console.debug(`[ARI] No instance registered for channel ${channelId} (event: ${event.type}). Registered IDs: [${[...this.channelInstances.keys()].join(', ')}]`);
       }
     }
 
