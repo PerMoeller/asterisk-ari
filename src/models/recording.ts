@@ -161,10 +161,12 @@ export class LiveRecordingInstance implements LiveRecording {
   /**
    * Remove all event listeners and unregister from client
    */
-  removeAllListeners(): this {
+  removeAllListeners(options?: { keepRegistered?: boolean }): this {
     this.listeners.clear();
     this.onceWrappers.clear();
-    this.client._unregisterRecordingInstance(this.name);
+    if (!options?.keepRegistered) {
+      this.client._unregisterRecordingInstance(this.name);
+    }
     return this;
   }
 

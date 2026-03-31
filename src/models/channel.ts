@@ -340,10 +340,12 @@ export class ChannelInstance implements Channel {
    * });
    * ```
    */
-  removeAllListeners(): this {
+  removeAllListeners(options?: { keepRegistered?: boolean }): this {
     this.listeners.clear();
     this.onceWrappers.clear();
-    this.client._unregisterChannelInstance(this.id);
+    if (!options?.keepRegistered) {
+      this.client._unregisterChannelInstance(this.id);
+    }
     return this;
   }
 
