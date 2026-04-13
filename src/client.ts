@@ -376,6 +376,13 @@ export class AriClient extends AriEventEmitter {
         }
         instance.updateData(event.channel);
         instance._emit(event.type as Parameters<typeof instance._emit>[0], event as never);
+        // Auto-cleanup after terminal event (ChannelDestroyed only).
+        // StasisEnd fires BEFORE ChannelDestroyed - cleaning up on StasisEnd
+        // would cause ChannelDestroyed to create a new empty instance via
+        // getConvenienceArg, losing all listeners.
+        if (event.type === 'ChannelDestroyed') {
+          this.channelInstances.delete(channelId);
+        }
       } else if (this.options.debug) {
         console.debug(`[ARI] No instance registered for channel ${channelId} (event: ${event.type}). Registered IDs: [${[...this.channelInstances.keys()].join(', ')}]`);
       }
@@ -388,6 +395,9 @@ export class AriClient extends AriEventEmitter {
       if (instance) {
         instance.updateData(event.bridge);
         instance._emit(event.type as Parameters<typeof instance._emit>[0], event as never);
+        if (event.type === 'BridgeDestroyed') {
+          this.bridgeInstances.delete(bridgeId);
+        }
       }
     }
 
@@ -398,6 +408,9 @@ export class AriClient extends AriEventEmitter {
       if (instance) {
         instance.updateData(event.playback);
         instance._emit(event.type as Parameters<typeof instance._emit>[0], event as never);
+        if (event.type === 'PlaybackFinished') {
+          this.playbackInstances.delete(playbackId);
+        }
       }
     }
 
@@ -408,6 +421,9 @@ export class AriClient extends AriEventEmitter {
       if (instance) {
         instance.updateData(event.recording);
         instance._emit(event.type as Parameters<typeof instance._emit>[0], event as never);
+        if (event.type === 'RecordingFinished' || event.type === 'RecordingFailed') {
+          this.recordingInstances.delete(recordingName);
+        }
       }
     }
   }

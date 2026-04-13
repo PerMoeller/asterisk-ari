@@ -115,7 +115,7 @@ export interface ChannelEventListeners {
  *
  *   channel.on('StasisEnd', () => {
  *     console.log('Call ended');
- *     channel.removeAllListeners();
+ *     channel.unregister();
  *   });
  *
  *   // Perform operations
@@ -332,25 +332,46 @@ export class ChannelInstance implements Channel {
   }
 
   /**
-   * Remove all event listeners and unregister from the client.
+   * Remove all event listeners from this channel instance.
    *
-   * Call this when you're done with the channel to clean up resources.
+   * The instance remains registered for event routing, so you can
+   * add new listeners afterwards. To fully clean up and unregister
+   * from event routing, use {@link destroy} instead.
+   *
+   * @returns This instance for chaining
+   *
+   * @example
+   * ```typescript
+   * // Clear listeners but keep receiving events
+   * channel.removeAllListeners();
+   * channel.on('ChannelDtmfReceived', newHandler);
+   * ```
+   */
+  removeAllListeners(): this {
+    this.listeners.clear();
+    this.onceWrappers.clear();
+    return this;
+  }
+
+  /**
+   * Remove all listeners and unregister from the client's event routing.
+   *
+   * After calling this, the instance will no longer receive events.
+   * Call this when you're completely done with the channel to free resources.
    *
    * @returns This instance for chaining
    *
    * @example
    * ```typescript
    * channel.on('StasisEnd', () => {
-   *   channel.removeAllListeners();
+   *   channel.unregister();
    * });
    * ```
    */
-  removeAllListeners(options?: { keepRegistered?: boolean }): this {
+  unregister(): this {
     this.listeners.clear();
     this.onceWrappers.clear();
-    if (!options?.keepRegistered) {
-      this.client._unregisterChannelInstance(this.id);
-    }
+    this.client._unregisterChannelInstance(this.id);
     return this;
   }
 
