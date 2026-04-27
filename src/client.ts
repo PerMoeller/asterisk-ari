@@ -358,6 +358,10 @@ export class AriClient extends AriEventEmitter {
     if (event.type === 'Dial' && 'peer' in event) {
       return this.Channel(event.peer.id, event.peer);
     }
+    // BridgeAttendedTransfer has no top-level bridge/channel — use first leg bridge
+    if (event.type === 'BridgeAttendedTransfer' && 'transferer_first_leg_bridge' in event && event.transferer_first_leg_bridge) {
+      return this._getBridgeInstance(event.transferer_first_leg_bridge.id, event.transferer_first_leg_bridge);
+    }
     return undefined;
   }
 
@@ -397,6 +401,25 @@ export class AriClient extends AriEventEmitter {
         instance._emit(event.type as Parameters<typeof instance._emit>[0], event as never);
         if (event.type === 'BridgeDestroyed') {
           this.bridgeInstances.delete(bridgeId);
+        }
+      }
+    }
+
+    // BridgeAttendedTransfer has no top-level bridge field — dispatch to both leg bridges
+    if (event.type === 'BridgeAttendedTransfer') {
+      const transferEvent = event as import('./events/types.js').BridgeAttendedTransferEvent;
+      if (transferEvent.transferer_first_leg_bridge) {
+        const instance = this.bridgeInstances.get(transferEvent.transferer_first_leg_bridge.id);
+        if (instance) {
+          instance.updateData(transferEvent.transferer_first_leg_bridge);
+          instance._emit('BridgeAttendedTransfer', transferEvent as never);
+        }
+      }
+      if (transferEvent.transferer_second_leg_bridge) {
+        const instance = this.bridgeInstances.get(transferEvent.transferer_second_leg_bridge.id);
+        if (instance) {
+          instance.updateData(transferEvent.transferer_second_leg_bridge);
+          instance._emit('BridgeAttendedTransfer', transferEvent as never);
         }
       }
     }
