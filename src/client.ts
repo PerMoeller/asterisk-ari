@@ -53,8 +53,6 @@ import { LiveRecordingInstance, StoredRecordingInstance } from './models/recordi
 
 import type { Channel, Bridge, Playback, LiveRecording, CreateBridgeParams } from './types/api.js';
 
-type EventListener<T> = (event: T) => void | Promise<void>;
-
 /**
  * Main ARI Client for interacting with Asterisk.
  *
@@ -87,7 +85,6 @@ type EventListener<T> = (event: T) => void | Promise<void>;
  */
 export class AriClient extends AriEventEmitter {
   private readonly options: ResolvedOptions;
-  private readonly http: HttpConnection;
   private readonly ws: WebSocketManager;
   private readonly versionCompat: VersionCompat;
 
@@ -268,7 +265,6 @@ export class AriClient extends AriEventEmitter {
   ) {
     super();
     this.options = options;
-    this.http = http;
     this.ws = ws;
     this.versionCompat = versionCompat;
 
@@ -401,6 +397,29 @@ export class AriClient extends AriEventEmitter {
         instance._emit(event.type as Parameters<typeof instance._emit>[0], event as never);
         if (event.type === 'BridgeDestroyed') {
           this.bridgeInstances.delete(bridgeId);
+        }
+      }
+    }
+
+    // Dial events have no top-level `channel` field — they carry `peer` (the
+    // dialed channel) and optional `caller` (the dialing channel). Dispatch
+    // to both: the peer instance is the obvious subject (PROGRESS/BUSY/etc.
+    // describe its dial leg), and the caller instance has equal stake — a
+    // hosted-PBX flow that originated an outbound channel typically holds
+    // a reference to the caller side and needs the same status to switch
+    // to early-media on 183 Session Progress.
+    if (event.type === 'Dial') {
+      const dialEvent = event as import('./events/types.js').DialEvent;
+      const peerInstance = this.channelInstances.get(dialEvent.peer.id);
+      if (peerInstance) {
+        peerInstance.updateData(dialEvent.peer);
+        peerInstance._emit('Dial', dialEvent);
+      }
+      if (dialEvent.caller) {
+        const callerInstance = this.channelInstances.get(dialEvent.caller.id);
+        if (callerInstance) {
+          callerInstance.updateData(dialEvent.caller);
+          callerInstance._emit('Dial', dialEvent);
         }
       }
     }
