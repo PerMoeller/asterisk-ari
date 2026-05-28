@@ -518,9 +518,9 @@ export interface ExternalMediaParams {
   /** External host and port (format: "host:port") */
   external_host: string;
   /** Protocol encapsulation type */
-  encapsulation?: 'rtp' | 'audiosocket';
+  encapsulation?: 'rtp' | 'audiosocket' | 'none';
   /** Transport protocol */
-  transport?: 'udp' | 'tcp';
+  transport?: 'udp' | 'tcp' | 'websocket';
   /** Connection type for TCP transport */
   connection_type?: 'client' | 'server';
   /** Audio codec format (e.g., "ulaw", "alaw", "slin16") */
