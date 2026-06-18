@@ -160,10 +160,13 @@ export class ChannelsResource extends BaseResource {
 
   /**
    * Answer a channel
+   * @param channelId - Id of the channel to answer
+   * @param timeout - Optional per-request timeout in milliseconds (overrides the connection default).
+   *   Useful for failing fast and retrying when Asterisk is contended (see ANSWER-RACE).
    * @throws {AriHttpError} If the ARI request fails
    */
-  async answer(channelId: string): Promise<void> {
-    return this.http.post<void>(`/channels/${encodeURIComponent(channelId)}/answer`);
+  async answer(channelId: string, timeout?: number): Promise<void> {
+    return this.http.post<void>(`/channels/${encodeURIComponent(channelId)}/answer`, undefined, undefined, timeout);
   }
 
   /**

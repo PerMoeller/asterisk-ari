@@ -26,6 +26,14 @@ export interface ConnectOptions {
   pingTimeout?: number;
   /** HTTP request timeout in ms (default: 30000) */
   requestTimeout?: number;
+  /**
+   * Interval in ms for reconciling the internal channel/bridge instance registries against
+   * Asterisk, evicting instances whose channel/bridge no longer exists (a safety net for missed
+   * terminal events that would otherwise leak the instance and everything it references). A
+   * candidate must be absent for two consecutive passes before eviction. Set to 0 to disable.
+   * Default: 60000.
+   */
+  instanceReconcileInterval?: number;
   /** Enable debug logging for event routing (default: false) */
   debug?: boolean;
 }
@@ -46,6 +54,7 @@ export interface ResolvedOptions {
   pingInterval: number;
   pingTimeout: number;
   requestTimeout: number;
+  instanceReconcileInterval: number;
   debug: boolean;
 }
 
@@ -62,6 +71,7 @@ export const DEFAULT_OPTIONS: Omit<ResolvedOptions, 'url' | 'username' | 'passwo
   pingInterval: 30000,
   pingTimeout: 5000,
   requestTimeout: 30000,
+  instanceReconcileInterval: 60000,
 };
 
 /**

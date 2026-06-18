@@ -402,6 +402,8 @@ export class ChannelInstance implements Channel {
   /**
    * Answer this channel.
    *
+   * @param timeout - Optional per-request timeout in milliseconds (overrides the connection default).
+   *   Useful for failing fast and retrying when Asterisk is contended (see ANSWER-RACE).
    * @throws {AriHttpError} If the ARI request fails
    *
    * @example
@@ -411,8 +413,8 @@ export class ChannelInstance implements Channel {
    * });
    * ```
    */
-  async answer(): Promise<void> {
-    return this.client.channels.answer(this.id);
+  async answer(timeout?: number): Promise<void> {
+    return this.client.channels.answer(this.id, timeout);
   }
 
   /**

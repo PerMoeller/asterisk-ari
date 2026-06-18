@@ -88,11 +88,21 @@ export class AriClient extends AriEventEmitter {
   private readonly ws: WebSocketManager;
   private readonly versionCompat: VersionCompat;
 
-  // Instance registries for event routing
+  // Instance registries for event routing. These are evicted only by terminal ARI events
+  // (ChannelDestroyed / BridgeDestroyed / PlaybackFinished / RecordingFinished). If such an event
+  // is never routed to the instance - a missed websocket event, or a convenience accessor that
+  // re-creates an instance after destroy - the entry leaks for the client's lifetime, pinning the
+  // instance and everything the consumer attached to it. The periodic reconciler below is a safety
+  // net for the channel/bridge registries (the ones with a list endpoint to reconcile against).
   private readonly channelInstances: Map<string, ChannelInstance> = new Map();
   private readonly bridgeInstances: Map<string, BridgeInstance> = new Map();
   private readonly playbackInstances: Map<string, PlaybackInstance> = new Map();
   private readonly recordingInstances: Map<string, LiveRecordingInstance> = new Map();
+
+  // Instance-registry reconciler state (see startInstanceReconciler / reconcileInstances).
+  private reconcileTimer?: ReturnType<typeof setInterval>;
+  private readonly staleChannelIds = new Set<string>();
+  private readonly staleBridgeIds = new Set<string>();
 
   // ============================================================================
   // API Resources
@@ -282,6 +292,97 @@ export class AriClient extends AriEventEmitter {
 
     // Set up WebSocket event handling
     this.setupWebSocketEvents();
+
+    // Start the safety-net reconciler for the channel/bridge instance registries.
+    this.startInstanceReconciler();
+  }
+
+  /**
+   * Start the periodic instance-registry reconciler (no-op if the interval is 0/disabled).
+   * @internal
+   */
+  private startInstanceReconciler(): void {
+    const interval = this.options.instanceReconcileInterval;
+
+    if (!interval || interval <= 0) {
+      return;
+    }
+
+    this.reconcileTimer = setInterval(() => {
+      void this.reconcileInstances();
+    }, interval);
+    // Don't let this timer alone keep the process alive.
+    this.reconcileTimer.unref?.();
+  }
+
+  /**
+   * Evict channel/bridge instances that Asterisk no longer knows about - a safety net for missed
+   * terminal events. A candidate must be absent for two consecutive passes before it is evicted, so
+   * an instance that is merely mid-setup (created locally before Asterisk reports it) is never
+   * dropped. Best-effort: if listing fails, the pass is skipped without touching the registries.
+   * @internal
+   */
+  private async reconcileInstances(): Promise<void> {
+    let liveChannelIds: Set<string>;
+    let liveBridgeIds: Set<string>;
+
+    try {
+      const [channels, bridges] = await Promise.all([this.channels.list(), this.bridges.list()]);
+
+      liveChannelIds = new Set(channels.map((ch) => ch.id));
+      liveBridgeIds = new Set(bridges.map((br) => br.id));
+    } catch (error) {
+      if (this.options.debug) {
+        console.debug(`[ARI] instance reconcile skipped (list failed): ${(error as Error).message}`);
+      }
+      return;
+    }
+
+    const evicted =
+      this.reconcileRegistry(this.channelInstances, liveChannelIds, this.staleChannelIds) +
+      this.reconcileRegistry(this.bridgeInstances, liveBridgeIds, this.staleBridgeIds);
+
+    if (evicted > 0 && this.options.debug) {
+      console.debug(
+        `[ARI] instance reconcile evicted ${evicted} stale instance(s); ` +
+          `registries now channels=${this.channelInstances.size} bridges=${this.bridgeInstances.size}`
+      );
+    }
+  }
+
+  /**
+   * Two-pass eviction for a single instance registry. An id absent from `live` is parked in
+   * `stale` on its first miss and only deleted from `registry` if it is still absent on the next
+   * pass. Returns the number of entries evicted this pass.
+   * @internal
+   */
+  private reconcileRegistry(
+    registry: Map<string, unknown>,
+    live: ReadonlySet<string>,
+    stale: Set<string>
+  ): number {
+    let evicted = 0;
+
+    for (const id of registry.keys()) {
+      if (live.has(id)) {
+        stale.delete(id);
+      } else if (stale.has(id)) {
+        registry.delete(id);
+        stale.delete(id);
+        evicted++;
+      } else {
+        stale.add(id); // first miss - give it one more pass before evicting
+      }
+    }
+
+    // Forget parked ids that are no longer in the registry (e.g. evicted by a terminal event).
+    for (const id of stale) {
+      if (!registry.has(id)) {
+        stale.delete(id);
+      }
+    }
+
+    return evicted;
   }
 
   /**
@@ -741,11 +842,17 @@ export class AriClient extends AriEventEmitter {
    * ```
    */
   stop(): void {
+    if (this.reconcileTimer) {
+      clearInterval(this.reconcileTimer);
+      this.reconcileTimer = undefined;
+    }
     this.ws.disconnect();
     this.channelInstances.clear();
     this.bridgeInstances.clear();
     this.playbackInstances.clear();
     this.recordingInstances.clear();
+    this.staleChannelIds.clear();
+    this.staleBridgeIds.clear();
   }
 
   /**

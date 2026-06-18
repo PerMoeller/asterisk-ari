@@ -258,11 +258,12 @@ export class HttpConnection {
    * @param path - API path
    * @param body - Request body (will be JSON-serialized)
    * @param query - Optional query parameters
+   * @param timeout - Optional per-request timeout in milliseconds (overrides the connection default)
    * @returns Promise resolving to the response data
    * @throws {AriHttpError} If the request fails or returns an error status
    */
-  async post<T>(path: string, body?: unknown, query?: RequestOptions['query']): Promise<T> {
-    return this.request<T>(path, { method: 'POST', body, query });
+  async post<T>(path: string, body?: unknown, query?: RequestOptions['query'], timeout?: number): Promise<T> {
+    return this.request<T>(path, { method: 'POST', body, query, timeout });
   }
 
   /**
