@@ -282,10 +282,18 @@ export class BridgeInstance implements Bridge {
   async play(params: PlayBridgeParams): Promise<PlaybackInstance> {
     // Create playback instance first to register for events
     const playback = this.client.Playback(params.playbackId);
-    await this.client.bridges.play(this.id, {
-      ...params,
-      playbackId: playback.id,
-    });
+    try {
+      await this.client.bridges.play(this.id, {
+        ...params,
+        playbackId: playback.id,
+      });
+    } catch (err) {
+      // The play was rejected, so this playback never exists in Asterisk and no PlaybackFinished
+      // will ever arrive to evict the instance - without this, every rejected play leaks one
+      // PlaybackInstance in the registry (the reconcile sweeper only covers channels/bridges).
+      this.client._unregisterPlaybackInstance(playback.id);
+      throw err;
+    }
     return playback;
   }
 
@@ -296,7 +304,14 @@ export class BridgeInstance implements Bridge {
   async record(params: RecordBridgeParams): Promise<LiveRecordingInstance> {
     // Create recording instance first to register for events
     const recording = this.client.LiveRecording(params.name);
-    await this.client.bridges.record(this.id, params);
+    try {
+      await this.client.bridges.record(this.id, params);
+    } catch (err) {
+      // Rejected record = no recording exists in Asterisk, no finished/failed event will ever
+      // evict the instance - same leak class as rejected plays.
+      this.client._unregisterRecordingInstance(recording.name);
+      throw err;
+    }
     return recording;
   }
 }
