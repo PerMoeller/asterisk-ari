@@ -292,3 +292,17 @@ Full TypeScript types for all 30+ event types:
 ## License
 
 MIT
+
+## Releasing
+
+Releases are automated. Every pull request to `master` must raise `version` in
+`package.json`; two required checks enforce it (`build` and `version-bump`), and
+`version-bump` also rejects a version that is already on the npm registry.
+
+On merge, `.github/workflows/publish.yml` publishes the new version to npm and
+creates a matching `v<version>` release. It authenticates with npm trusted
+publishing (OIDC), so no publish token is stored in the repository. A merge that
+does not change the version publishes nothing.
+
+Publishing from a workstation is refused: `prepublishOnly` runs a guard that
+only lets `npm publish` proceed inside GitHub Actions.
