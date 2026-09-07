@@ -1,0 +1,70 @@
+name: Publish
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write # create the release tag
+  id-token: write # OIDC token for npm trusted publishing
+
+# Never let two merges publish at the same time.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      # Trusted publishing needs npm 11.5.1 or later, which is newer than the npm
+      # bundled with some Node 24 releases. Pinned to the npm 12 line, the same
+      # generation the trusted publisher config is registered with.
+      - run: npm install -g npm@^12
+
+      - name: Resolve version
+        id: version
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          # A merge that did not change the version (an admin bypassing the PR
+          # checks, say) should be a no-op rather than a failed publish.
+          if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ]; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is already on the registry - nothing to publish"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.version.outputs.published == 'false'
+        run: npm ci
+
+      # No NODE_AUTH_TOKEN here on purpose: npm authenticates with the OIDC token
+      # from the trusted publisher configured for this package. prepublishOnly
+      # runs the build, so the tarball is always compiled fresh from this commit.
+      - name: Publish to npm
+        if: steps.version.outputs.published == 'false'
+        run: npm publish
+
+      - name: Tag the release
+        if: steps.version.outputs.published == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --target "${{ github.sha }}" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --generate-notes
