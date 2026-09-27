@@ -219,6 +219,10 @@ export interface Channel {
    * in Asterisk 16-17. The library automatically copies this to `protocol_id`.
    */
   callId?: string;
+  /** The Caller ID RDNIS (redirecting number). Only present when set. */
+  caller_rdnis?: string;
+  /** The tenant ID for the channel. Only present when set. */
+  tenantid?: string;
 }
 
 /**
@@ -492,6 +496,24 @@ export interface DialParams {
 }
 
 /**
+ * Transfer progress state reported to a channel with `transferProgress()`.
+ *
+ * Tells the transferring party how the transfer it requested is going (for PJSIP,
+ * this is sent as a NOTIFY for the REFER):
+ * - `channel_progress` - The transfer target is being called
+ * - `channel_answered` - The transfer target answered
+ * - `channel_unavailable` - The transfer target is unavailable
+ * - `channel_declined` - The transfer target declined the call
+ *
+ * @since Asterisk 20.13, 21.8, 22.3
+ */
+export type TransferProgressState =
+  | 'channel_progress'
+  | 'channel_answered'
+  | 'channel_unavailable'
+  | 'channel_declined';
+
+/**
  * Parameters for creating an external media channel.
  *
  * External media allows connecting Asterisk audio to external
@@ -515,8 +537,11 @@ export interface ExternalMediaParams {
   channelId?: string;
   /** Stasis application name */
   app: string;
-  /** External host and port (format: "host:port") */
-  external_host: string;
+  /**
+   * External host and port (format: "host:port"), or the websocket_client connection ID
+   * for the websocket transport. May be omitted for a websocket server connection.
+   */
+  external_host?: string;
   /** Protocol encapsulation type */
   encapsulation?: 'rtp' | 'audiosocket' | 'none';
   /** Transport protocol */
@@ -761,6 +786,45 @@ export interface Application {
   endpoint_ids: string[];
   /** Device names subscribed to by this application */
   device_names: string[];
+  /**
+   * Event types sent to the application (empty = all)
+   * @since Asterisk 16.3
+   */
+  events_allowed?: EventFilterEntry[];
+  /**
+   * Event types not sent to the application
+   * @since Asterisk 16.3
+   */
+  events_disallowed?: EventFilterEntry[];
+}
+
+/**
+ * One entry in an application event filter.
+ */
+export interface EventFilterEntry {
+  /** Event type (e.g., "StasisStart", "ChannelDestroyed") */
+  type: string;
+}
+
+/**
+ * Event filter for `applications.filter()`.
+ *
+ * An event is sent to the application if it is not in `disallowed` and either `allowed`
+ * is empty or the event is in it. Event types can be given as plain strings; they are
+ * sent to Asterisk as `{ type }` objects.
+ *
+ * @example
+ * ```typescript
+ * await client.applications.filter('my-app', {
+ *   allowed: ['StasisStart', 'StasisEnd', 'ChannelDtmfReceived'],
+ * });
+ * ```
+ */
+export interface ApplicationEventFilter {
+  /** Event types to allow */
+  allowed?: (string | EventFilterEntry)[];
+  /** Event types to disallow */
+  disallowed?: (string | EventFilterEntry)[];
 }
 
 /**
@@ -784,10 +848,13 @@ export interface SubscribeParams {
  * - `queued` - Playback is waiting to start
  * - `playing` - Playback is in progress
  * - `paused` - Playback is paused (can be resumed)
- * - `complete` - Playback finished successfully
+ * - `continuing` - Playback is moving on to the next media URI
+ * - `done` - Playback finished (completed, stopped or canceled)
  * - `failed` - Playback failed
+ * - `complete` - Never sent by Asterisk, which reports a finished playback as `done`.
+ *   Kept only so existing comparisons still compile.
  */
-export type PlaybackState = 'queued' | 'playing' | 'paused' | 'complete' | 'failed';
+export type PlaybackState = 'queued' | 'playing' | 'paused' | 'continuing' | 'done' | 'failed' | 'complete';
 
 /**
  * Represents an active playback operation.
@@ -1053,6 +1120,57 @@ export interface StatusInfo {
 export interface Variable {
   /** The variable's value */
   value: string;
+}
+
+/**
+ * Response from `asterisk.ping()`.
+ */
+export interface AsteriskPing {
+  /** Asterisk ID (unique per Asterisk instance) */
+  asterisk_id: string;
+  /** Always "pong" */
+  ping: string;
+  /** ISO 8601 timestamp of the ping */
+  timestamp: string;
+}
+
+/**
+ * An attribute/value pair of a dynamic configuration object.
+ *
+ * @example
+ * ```typescript
+ * const fields: ConfigTuple[] = [{ attribute: 'direct_media', value: 'no' }];
+ * ```
+ */
+export interface ConfigTuple {
+  /** Configuration attribute name */
+  attribute: string;
+  /** Attribute value */
+  value: string;
+}
+
+/**
+ * Parameters for generating a user event with `events.userEvent()`.
+ *
+ * @example
+ * ```typescript
+ * await client.events.userEvent('CallFlagged', {
+ *   application: 'my-app',
+ *   source: `channel:${channel.id}`,
+ *   variables: { reason: 'vip' },
+ * });
+ * ```
+ */
+export interface UserEventParams {
+  /** Name of the application that will receive the event */
+  application: string;
+  /**
+   * Event source URI(s): `channel:{channelId}`, `bridge:{bridgeId}`,
+   * `endpoint:{tech}/{resource}` or `deviceState:{deviceName}`
+   */
+  source?: string | string[];
+  /** Custom key/value pairs to add to the user event */
+  variables?: Record<string, string>;
 }
 
 /**

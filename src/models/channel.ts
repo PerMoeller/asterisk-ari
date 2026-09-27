@@ -23,6 +23,7 @@ import type {
   SnoopParams,
   DialParams,
   RTPstat,
+  TransferProgressState,
 } from '../types/api.js';
 import type {
   AriEventMap,
@@ -39,8 +40,14 @@ import type {
   ChannelUnholdEvent,
   ChannelTalkingStartedEvent,
   ChannelTalkingFinishedEvent,
+  ChannelConnectedLineEvent,
+  ChannelDialplanEvent,
+  ChannelCallerIdEvent,
+  ChannelToneDetectedEvent,
   ChannelEnteredBridgeEvent,
   ChannelLeftBridgeEvent,
+  ChannelUsereventEvent,
+  ChannelTransferEvent,
   DialEvent,
 } from '../events/types.js';
 import type { PlaybackInstance } from './playback.js';
@@ -82,8 +89,14 @@ export interface ChannelEventListeners {
   ChannelUnhold: ChannelEventListener<ChannelUnholdEvent>;
   ChannelTalkingStarted: ChannelEventListener<ChannelTalkingStartedEvent>;
   ChannelTalkingFinished: ChannelEventListener<ChannelTalkingFinishedEvent>;
+  ChannelConnectedLine: ChannelEventListener<ChannelConnectedLineEvent>;
+  ChannelDialplan: ChannelEventListener<ChannelDialplanEvent>;
+  ChannelCallerId: ChannelEventListener<ChannelCallerIdEvent>;
+  ChannelToneDetected: ChannelEventListener<ChannelToneDetectedEvent>;
   ChannelEnteredBridge: ChannelEventListener<ChannelEnteredBridgeEvent>;
   ChannelLeftBridge: ChannelEventListener<ChannelLeftBridgeEvent>;
+  ChannelUserevent: ChannelEventListener<ChannelUsereventEvent>;
+  ChannelTransfer: ChannelEventListener<ChannelTransferEvent>;
   Dial: ChannelEventListener<DialEvent>;
 }
 
@@ -151,6 +164,10 @@ export class ChannelInstance implements Channel {
   channelvars?: Record<string, string>;
   /** Protocol-specific identifier (Asterisk 20+) */
   protocol_id?: string;
+  /** The Caller ID RDNIS (redirecting number), when set */
+  caller_rdnis?: string;
+  /** The tenant ID for the channel, when set */
+  tenantid?: string;
 
   private readonly client: AriClient;
   private readonly listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
@@ -204,6 +221,8 @@ export class ChannelInstance implements Channel {
     if (data.language !== undefined) this.language = data.language;
     if (data.channelvars !== undefined) this.channelvars = data.channelvars;
     if (data.protocol_id !== undefined) this.protocol_id = data.protocol_id;
+    if (data.caller_rdnis !== undefined) this.caller_rdnis = data.caller_rdnis;
+    if (data.tenantid !== undefined) this.tenantid = data.tenantid;
     // Asterisk 16-17 compatibility: callId was renamed to protocol_id in Asterisk 18
     if (this.protocol_id === undefined && data.callId !== undefined) {
       this.protocol_id = data.callId;
@@ -511,6 +530,46 @@ export class ChannelInstance implements Channel {
    */
   async ringStop(): Promise<void> {
     return this.client.channels.ringStop(this.id);
+  }
+
+  /**
+   * Indicate progress to this channel (e.g., SIP 183 Session Progress), allowing
+   * early media before the channel is answered.
+   *
+   * Requires Asterisk 20.16, 21.11 or 22.6+.
+   *
+   * @throws {AriHttpError} If the ARI request fails
+   *
+   * @example
+   * ```typescript
+   * await channel.progress();
+   * await channel.play({ media: 'sound:please-hold' }); // early media
+   * await channel.answer();
+   * ```
+   */
+  async progress(): Promise<void> {
+    return this.client.channels.progress(this.id);
+  }
+
+  /**
+   * Inform this channel about the progress of the transfer it requested
+   * (see the ChannelTransfer event).
+   *
+   * Requires Asterisk 20.13, 21.8 or 22.3+.
+   *
+   * @param states - The state of the transfer
+   * @throws {AriHttpError} If the ARI request fails
+   *
+   * @example
+   * ```typescript
+   * channel.on('ChannelTransfer', async (event, ch) => {
+   *   // ... dial event.refer_to.requested_destination ...
+   *   await ch.transferProgress('channel_answered');
+   * });
+   * ```
+   */
+  async transferProgress(states: TransferProgressState): Promise<void> {
+    return this.client.channels.transferProgress(this.id, states);
   }
 
   /**

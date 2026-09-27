@@ -55,6 +55,7 @@ export type {
   SnoopParams,
   DialParams,
   ExternalMediaParams,
+  TransferProgressState,
   // Bridge
   Bridge,
   BridgeType,
@@ -71,6 +72,8 @@ export type {
   // Application
   Application,
   SubscribeParams,
+  EventFilterEntry,
+  ApplicationEventFilter,
   // Playback
   Playback,
   PlaybackState,
@@ -96,8 +99,12 @@ export type {
   ConfigInfo,
   StatusInfo,
   Variable,
+  AsteriskPing,
   Module,
   LogChannel,
+  ConfigTuple,
+  // Events
+  UserEventParams,
 } from './types/api.js';
 
 // Event Types
@@ -162,6 +169,10 @@ export type {
   ChannelUsereventEvent,
   // Channel transfer event
   ChannelTransferEvent,
+  ReferTo,
+  ReferredBy,
+  RequiredDestination,
+  AdditionalParam,
   // Event type categories
   ChannelEventType,
   BridgeEventType,
@@ -206,3 +217,4 @@ export { RecordingsResource, StoredRecordingsResource, LiveRecordingsResource } 
 export { SoundsResource } from './resources/sounds.js';
 export { MailboxesResource } from './resources/mailboxes.js';
 export { DeviceStatesResource } from './resources/devicestates.js';
+export { EventsResource } from './resources/events.js';

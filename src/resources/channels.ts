@@ -21,6 +21,7 @@ import type {
   SnoopParams,
   DialParams,
   ExternalMediaParams,
+  TransferProgressState,
   Playback,
   LiveRecording,
   RTPstat,
@@ -183,6 +184,19 @@ export class ChannelsResource extends BaseResource {
    */
   async ringStop(channelId: string): Promise<void> {
     return this.http.delete<void>(`/channels/${encodeURIComponent(channelId)}/ring`);
+  }
+
+  /**
+   * Indicate progress to a channel (e.g., SIP 183 Session Progress), allowing early media
+   * before the channel is answered.
+   *
+   * Requires Asterisk 20.16, 21.11 or 22.6+. This cannot be detected from the ARI version,
+   * so older servers reject the request with an AriHttpError.
+   *
+   * @throws {AriHttpError} If the ARI request fails
+   */
+  async progress(channelId: string): Promise<void> {
+    return this.http.post<void>(`/channels/${encodeURIComponent(channelId)}/progress`);
   }
 
   /**
@@ -396,5 +410,24 @@ export class ChannelsResource extends BaseResource {
 
     const data = await this.http.post<Channel>('/channels/externalMedia', body, query);
     return this.client.Channel(data.id, data);
+  }
+
+  /**
+   * Inform a channel about the progress of the attended/blind transfer it requested
+   * (see the ChannelTransfer event).
+   *
+   * Requires Asterisk 20.13, 21.8 or 22.3+. This cannot be detected from the ARI version,
+   * so older servers reject the request with an AriHttpError.
+   *
+   * @param channelId - Id of the channel that requested the transfer
+   * @param states - The state of the transfer
+   * @throws {AriHttpError} If the ARI request fails
+   */
+  async transferProgress(channelId: string, states: TransferProgressState): Promise<void> {
+    return this.http.post<void>(
+      `/channels/${encodeURIComponent(channelId)}/transfer_progress`,
+      undefined,
+      { states }
+    );
   }
 }

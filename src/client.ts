@@ -44,6 +44,7 @@ import { RecordingsResource } from './resources/recordings.js';
 import { SoundsResource } from './resources/sounds.js';
 import { MailboxesResource } from './resources/mailboxes.js';
 import { DeviceStatesResource } from './resources/devicestates.js';
+import { EventsResource } from './resources/events.js';
 
 // Models
 import { ChannelInstance } from './models/channel.js';
@@ -258,6 +259,21 @@ export class AriClient extends AriEventEmitter {
   public readonly deviceStates: DeviceStatesResource;
 
   /**
+   * Events API for generating user events.
+   *
+   * @example
+   * ```typescript
+   * // Send a ChannelUserevent to an application
+   * await client.events.userEvent('CallFlagged', {
+   *   application: 'my-app',
+   *   source: `channel:${channelId}`,
+   *   variables: { reason: 'vip' },
+   * });
+   * ```
+   */
+  public readonly events: EventsResource;
+
+  /**
    * Creates a new ARI client.
    *
    * @internal - Use the {@link connect} function instead of instantiating directly.
@@ -289,6 +305,7 @@ export class AriClient extends AriEventEmitter {
     this.sounds = new SoundsResource(this, http, versionCompat);
     this.mailboxes = new MailboxesResource(this, http, versionCompat);
     this.deviceStates = new DeviceStatesResource(this, http, versionCompat);
+    this.events = new EventsResource(this, http, versionCompat);
 
     // Set up WebSocket event handling
     this.setupWebSocketEvents();
@@ -455,6 +472,11 @@ export class AriClient extends AriEventEmitter {
     if (event.type === 'Dial' && 'peer' in event) {
       return this.Channel(event.peer.id, event.peer);
     }
+    // ChannelTransfer has no top-level channel — use the channel that received the transfer request
+    if (event.type === 'ChannelTransfer') {
+      const source = event.referred_by.source_channel;
+      return this.Channel(source.id, source);
+    }
     // BridgeAttendedTransfer has no top-level bridge/channel — use first leg bridge
     if (event.type === 'BridgeAttendedTransfer' && 'transferer_first_leg_bridge' in event && event.transferer_first_leg_bridge) {
       return this._getBridgeInstance(event.transferer_first_leg_bridge.id, event.transferer_first_leg_bridge);
@@ -522,6 +544,18 @@ export class AriClient extends AriEventEmitter {
           callerInstance.updateData(dialEvent.caller);
           callerInstance._emit('Dial', dialEvent);
         }
+      }
+    }
+
+    // ChannelTransfer has no top-level `channel` field. Dispatch to the channel that received the
+    // transfer request (referred_by.source_channel): that is the channel the transfer is reported
+    // back on with transferProgress(). The other channels in the event only see it via global listeners.
+    if (event.type === 'ChannelTransfer') {
+      const source = event.referred_by.source_channel;
+      const instance = this.channelInstances.get(source.id);
+      if (instance) {
+        instance.updateData(source);
+        instance._emit('ChannelTransfer', event);
       }
     }
 
