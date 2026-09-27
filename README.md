@@ -85,6 +85,8 @@ All ARI resources are available on the client:
 // Channels
 const channels = await client.channels.list();
 const channel = await client.channels.get('channel-id'); // Returns ChannelInstance
+await client.channels.progress('channel-id'); // Early media, e.g. SIP 183 (Asterisk 20.16/21.11/22.6+)
+await client.channels.transferProgress('channel-id', 'channel_answered'); // Answer a ChannelTransfer
 await client.channels.hangup('channel-id');
 
 // Bridges
@@ -119,6 +121,16 @@ const states = await client.deviceStates.list();
 
 // Asterisk
 const info = await client.asterisk.getInfo();
+await client.asterisk.updateObject('res_pjsip', 'endpoint', 'alice', [
+  { attribute: 'allow', value: 'ulaw' },
+]); // Dynamic (sorcery) configuration objects: getObject / updateObject / deleteObject
+
+// Events
+await client.events.userEvent('CallFlagged', {
+  application: 'my-app',
+  source: 'channel:channel-id',
+  variables: { reason: 'vip' },
+});
 ```
 
 ## Resource Instances
@@ -283,7 +295,7 @@ console.log(client.version.hasProtocolId); // true (Asterisk 20+)
 
 Full TypeScript types for all 30+ event types:
 
-- Channel: `StasisStart`, `StasisEnd`, `ChannelCreated`, `ChannelDestroyed`, `ChannelStateChange`, `ChannelDtmfReceived`, `ChannelHangupRequest`, `ChannelVarset`, `ChannelHold`, `ChannelUnhold`, `ChannelTalkingStarted`, `ChannelTalkingFinished`, `ChannelConnectedLine`, `ChannelDialplan`, `ChannelCallerId`, `ChannelToneDetected`
+- Channel: `StasisStart`, `StasisEnd`, `ChannelCreated`, `ChannelDestroyed`, `ChannelStateChange`, `ChannelDtmfReceived`, `ChannelHangupRequest`, `ChannelVarset`, `ChannelHold`, `ChannelUnhold`, `ChannelTalkingStarted`, `ChannelTalkingFinished`, `ChannelConnectedLine`, `ChannelDialplan`, `ChannelCallerId`, `ChannelToneDetected`, `ChannelUserevent`, `ChannelTransfer`
 - Bridge: `BridgeCreated`, `BridgeDestroyed`, `BridgeMerged`, `BridgeVideoSourceChanged`, `BridgeBlindTransfer`, `BridgeAttendedTransfer`, `ChannelEnteredBridge`, `ChannelLeftBridge`
 - Playback: `PlaybackStarted`, `PlaybackContinuing`, `PlaybackFinished`
 - Recording: `RecordingStarted`, `RecordingFinished`, `RecordingFailed`

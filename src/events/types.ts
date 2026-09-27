@@ -111,6 +111,11 @@ export interface ChannelDestroyedEvent extends BaseEvent {
   cause: number;
   /** Human-readable hangup cause description */
   cause_txt: string;
+  /**
+   * Technology-specific off-nominal cause of the hangup (e.g., the SIP response code)
+   * @since Asterisk 22.7
+   */
+  tech_cause?: number;
 }
 
 /**
@@ -166,6 +171,11 @@ export interface ChannelHangupRequestEvent extends BaseEvent {
   soft?: boolean;
   /** Hangup cause code if specified */
   cause?: number;
+  /**
+   * Technology-specific off-nominal cause of the hangup (e.g., the SIP response code)
+   * @since Asterisk 22.7
+   */
+  tech_cause?: number;
 }
 
 /**
@@ -682,14 +692,76 @@ export interface ChannelUsereventEvent extends BaseEvent {
 // ============================================================================
 
 /**
- * Emitted when a channel transfer occurs.
+ * A protocol-specific parameter of a transfer request.
+ */
+export interface AdditionalParam {
+  /** Parameter name (for SIP, the name of a header or URI parameter) */
+  parameter_name: string;
+  /** Parameter value */
+  parameter_value: string;
+}
+
+/**
+ * The destination a transfer asks for.
+ */
+export interface RequiredDestination {
+  /**
+   * The protocol-id requested by the referee (for SIP, a Call-ID). Set for an attended
+   * transfer; mutually exclusive with `destination`.
+   */
+  protocol_id?: string;
+  /** Destination user part. Set for a blind transfer; mutually exclusive with `protocol_id`. */
+  destination?: string;
+  /** Additional protocol-specific information */
+  additional_protocol_params?: AdditionalParam[];
+}
+
+/**
+ * Refer-To information of a ChannelTransfer event.
+ */
+export interface ReferTo {
+  /** The requested destination */
+  requested_destination: RequiredDestination;
+  /** The channel that is to be replaced (attended transfer) */
+  destination_channel?: Channel;
+  /** Channel connected to the channel that is to be replaced */
+  connected_channel?: Channel;
+  /** Bridge connecting both destination channels */
+  bridge?: Bridge;
+}
+
+/**
+ * Referred-By information of a ChannelTransfer event (RFC 3892).
+ */
+export interface ReferredBy {
+  /** The channel on which the transfer request (REFER) was received */
+  source_channel: Channel;
+  /** Channel connected to the source channel */
+  connected_channel?: Channel;
+  /** Bridge connecting both channels */
+  bridge?: Bridge;
+}
+
+/**
+ * Emitted when a channel receives a transfer request (e.g., a SIP REFER).
  *
- * @since Asterisk 22+
+ * The event has no top-level `channel`: the channel that received the request is
+ * `referred_by.source_channel`, and that is the instance the event is routed to.
+ * Report the outcome back with `channel.transferProgress()`.
+ *
+ * @since Asterisk 20.13, 21.8, 22.3
  */
 export interface ChannelTransferEvent extends BaseEvent {
   type: 'ChannelTransfer';
-  /** The channel being transferred */
-  channel: Channel;
+  /**
+   * Transfer state, when known. Asterisk sends `channel_progress`, `channel_answered`
+   * or `channel_declined` (the latter also for an unavailable target).
+   */
+  state?: string;
+  /** The requested destination and the channels it involves */
+  refer_to: ReferTo;
+  /** The channel that received the request and the channels it is connected to */
+  referred_by: ReferredBy;
 }
 
 // ============================================================================

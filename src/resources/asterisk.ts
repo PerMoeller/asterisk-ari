@@ -6,7 +6,7 @@ import { BaseResource } from './base.js';
 import type { HttpConnection } from '../connection.js';
 import type { VersionCompat } from '../version.js';
 import type { AriClient } from '../client.js';
-import type { AsteriskInfo, Variable, Module, LogChannel } from '../types/api.js';
+import type { AsteriskInfo, AsteriskPing, Variable, Module, LogChannel, ConfigTuple } from '../types/api.js';
 
 export type AsteriskInfoFilter = 'build' | 'system' | 'config' | 'status';
 
@@ -125,7 +125,74 @@ export class AsteriskResource extends BaseResource {
    * Ping Asterisk
    * @throws {AriHttpError} If the ARI request fails
    */
-  async ping(): Promise<{ ping: string; timestamp: string; asterisk_id: string }> {
-    return this.http.get('/asterisk/ping');
+  async ping(): Promise<AsteriskPing> {
+    return this.http.get<AsteriskPing>('/asterisk/ping');
+  }
+
+  /**
+   * Retrieve a dynamic configuration object (sorcery), e.g. a PJSIP endpoint.
+   *
+   * @param configClass - Configuration class (module), e.g. "res_pjsip"
+   * @param objectType - Object type, e.g. "endpoint", "aor", "auth"
+   * @param id - Object id
+   * @throws {AriHttpError} If the ARI request fails (404 if not found)
+   *
+   * @example
+   * ```typescript
+   * const fields = await client.asterisk.getObject('res_pjsip', 'endpoint', 'alice');
+   * ```
+   */
+  async getObject(configClass: string, objectType: string, id: string): Promise<ConfigTuple[]> {
+    return this.http.get<ConfigTuple[]>(this.configObjectPath(configClass, objectType, id));
+  }
+
+  /**
+   * Create or update a dynamic configuration object.
+   *
+   * The object type must be backed by a writable sorcery wizard (e.g. "astdb" or
+   * "memory") for this to succeed.
+   *
+   * @param configClass - Configuration class (module), e.g. "res_pjsip"
+   * @param objectType - Object type, e.g. "endpoint", "aor", "auth"
+   * @param id - Object id
+   * @param fields - Fields to set. May be omitted when creating an object with defaults.
+   * @returns The object's fields after the update
+   * @throws {AriHttpError} If the ARI request fails
+   *
+   * @example
+   * ```typescript
+   * await client.asterisk.updateObject('res_pjsip', 'endpoint', 'alice', [
+   *   { attribute: 'allow', value: 'ulaw' },
+   *   { attribute: 'aors', value: 'alice' },
+   * ]);
+   * ```
+   */
+  async updateObject(
+    configClass: string,
+    objectType: string,
+    id: string,
+    fields?: ConfigTuple[]
+  ): Promise<ConfigTuple[]> {
+    return this.http.put<ConfigTuple[]>(
+      this.configObjectPath(configClass, objectType, id),
+      fields ? { fields } : undefined
+    );
+  }
+
+  /**
+   * Delete a dynamic configuration object.
+   *
+   * @param configClass - Configuration class (module), e.g. "res_pjsip"
+   * @param objectType - Object type, e.g. "endpoint", "aor", "auth"
+   * @param id - Object id
+   * @throws {AriHttpError} If the ARI request fails
+   */
+  async deleteObject(configClass: string, objectType: string, id: string): Promise<void> {
+    return this.http.delete<void>(this.configObjectPath(configClass, objectType, id));
+  }
+
+  private configObjectPath(configClass: string, objectType: string, id: string): string {
+    return `/asterisk/config/dynamic/${encodeURIComponent(configClass)}/` +
+      `${encodeURIComponent(objectType)}/${encodeURIComponent(id)}`;
   }
 }
