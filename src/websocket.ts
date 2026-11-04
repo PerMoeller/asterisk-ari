@@ -32,6 +32,8 @@ export class WebSocketManager extends ConnectionEventEmitter {
   private pingTimer: ReturnType<typeof setInterval> | null = null;
   private pongTimer: ReturnType<typeof setTimeout> | null = null;
   private intentionalClose = false;
+  /** Set once the first connection succeeds; automatic reconnection only applies after that. */
+  private hasConnected = false;
   private readonly wsUrl: string;
   private readonly options: WebSocketManagerOptions;
 
@@ -97,6 +99,7 @@ export class WebSocketManager extends ConnectionEventEmitter {
         this.ws?.removeListener('error', onError);
         this.reconnectAttempts = 0;
         this.reconnecting = false;
+        this.hasConnected = true;
         this.startPingInterval();
         this.emit('connected', undefined);
         resolve();
@@ -124,7 +127,11 @@ export class WebSocketManager extends ConnectionEventEmitter {
 
         if (!this.intentionalClose) {
           this.emit('disconnected', { intentional: false });
-          if (this.options.reconnect) {
+          // Only reconnect a connection that was established at least once. If the very
+          // first connect() fails, its promise rejects and the caller owns the retry: a
+          // background reconnect here would leave an orphaned manager that nobody holds a
+          // reference to (it could not be stopped, and its events would never be routed).
+          if (this.options.reconnect && this.hasConnected) {
             this.scheduleReconnect();
           }
         } else {
@@ -133,7 +140,13 @@ export class WebSocketManager extends ConnectionEventEmitter {
       });
 
       this.ws.on('error', (error: Error) => {
-        this.emit('error', error);
+        // Node's EventEmitter throws on an 'error' event without listeners. When the
+        // initial connect() fails, no AriClient exists yet to listen, and the failure is
+        // already reported through the rejected promise: re-emitting would crash the
+        // process with an uncaught exception.
+        if (this.listenerCount('error') > 0) {
+          this.emit('error', error);
+        }
       });
 
       this.ws.on('pong', () => {

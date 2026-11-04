@@ -319,7 +319,12 @@ export class HttpConnection {
     // Decode from auth header
     const base64 = this.authHeader.replace('Basic ', '');
     const decoded = Buffer.from(base64, 'base64').toString('utf-8');
-    const [username, password] = decoded.split(':');
-    return { username: username!, password: password! };
+    // Split on the FIRST colon only: per RFC 7617 the user-id cannot contain a colon,
+    // but the password can (e.g. "p:ss" must not be truncated to "p").
+    const separator = decoded.indexOf(':');
+    return {
+      username: decoded.slice(0, separator),
+      password: decoded.slice(separator + 1),
+    };
   }
 }
