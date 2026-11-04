@@ -77,6 +77,10 @@ const client = await connect({
 });
 ```
 
+Automatic reconnection applies once the initial connection has succeeded. If the
+initial `connect()` fails, the promise rejects and no retry runs in the background:
+retrying the initial connection is up to the caller.
+
 ## API Resources
 
 All ARI resources are available on the client:
@@ -233,6 +237,31 @@ client.on('StasisStart', (event) => {
 client.on('ChannelDestroyed', (event) => {
   console.log('Channel destroyed:', event.channel.id);
 });
+```
+
+## Connection Events
+
+React to connection changes (e.g. mark the application unhealthy, release in-flight
+calls) instead of only reading the logs. These cover what `ari-client` exposed as
+`WebSocketConnected` / `WebSocketReconnecting`:
+
+```typescript
+client.onConnectionEvent('disconnected', ({ intentional }) => {
+  if (!intentional) console.warn('ARI connection lost');
+});
+
+client.onConnectionEvent('reconnecting', ({ attempt, delay }) => {
+  console.log(`Reconnect attempt ${attempt} in ${delay}ms`);
+});
+
+// Emitted on the initial connection and after every successful reconnection
+client.onConnectionEvent('connected', () => console.log('ARI connected'));
+
+client.onConnectionEvent('reconnected', () => console.log('ARI reconnected'));
+client.onConnectionEvent('error', (error) => console.error('ARI WebSocket error', error));
+
+// Remove a listener
+client.offConnectionEvent('disconnected', listener);
 ```
 
 ## Connection Pool

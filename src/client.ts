@@ -29,6 +29,7 @@ import { HttpConnection } from './connection.js';
 import { WebSocketManager } from './websocket.js';
 import { fetchAriVersion, VersionCompat } from './version.js';
 import { AriEventEmitter } from './events/emitter.js';
+import type { ConnectionEventMap } from './events/emitter.js';
 import type { AriEvent, AriEventType, AriEventMap } from './events/types.js';
 import type { ConnectOptions, ResolvedOptions } from './types/options.js';
 import { resolveOptions } from './types/options.js';
@@ -849,6 +850,55 @@ export class AriClient extends AriEventEmitter {
    */
   get version(): VersionCompat {
     return this.versionCompat;
+  }
+
+  /**
+   * Listen to connection lifecycle events of the event WebSocket.
+   *
+   * Lets applications react to connection changes (mark themselves unhealthy,
+   * release in-flight calls, alert...) instead of only reading the console logs.
+   * Covers what `ari-client` exposed as `WebSocketConnected` / `WebSocketReconnecting`.
+   *
+   * Events:
+   * - `connected`: the WebSocket is open (initial connection and every successful reconnection)
+   * - `disconnected`: the WebSocket closed (`intentional` is `true` after {@link AriClient.stop})
+   * - `reconnecting`: a reconnection attempt is scheduled (`attempt`, `delay` in ms)
+   * - `reconnected`: a reconnection attempt succeeded
+   * - `error`: a WebSocket error occurred
+   *
+   * @param event - Connection event name
+   * @param listener - Callback invoked with the event data
+   * @returns This client for chaining
+   *
+   * @example
+   * ```typescript
+   * client.onConnectionEvent('disconnected', ({ intentional }) => {
+   *   if (!intentional) markUnhealthy();
+   * });
+   * client.onConnectionEvent('connected', () => markHealthy());
+   * ```
+   */
+  onConnectionEvent<K extends keyof ConnectionEventMap>(
+    event: K,
+    listener: (data: ConnectionEventMap[K]) => void
+  ): this {
+    this.ws.on(event, listener);
+    return this;
+  }
+
+  /**
+   * Remove a listener added with {@link AriClient.onConnectionEvent}.
+   *
+   * @param event - Connection event name
+   * @param listener - The listener to remove
+   * @returns This client for chaining
+   */
+  offConnectionEvent<K extends keyof ConnectionEventMap>(
+    event: K,
+    listener: (data: ConnectionEventMap[K]) => void
+  ): this {
+    this.ws.off(event, listener);
+    return this;
   }
 
   /**
